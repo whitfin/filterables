@@ -39,7 +39,7 @@ Setting a class as `Filterable` is extremely simple:
 from filterables import Filterable
 
 class MyClass(Filterable):
-    pass
+    id: str
 ```
 
 The `Filterable` class is a subclass of a Pydantic `BaseModel`, so you can
@@ -53,7 +53,7 @@ from filterables import Filterable
 from sqlmodel import SQLModel
 
 class MyClass(Filterable, SQLModel):
-    pass
+    id: str
 ```
 
 Rather than combining both into a single parent class, these two classes
