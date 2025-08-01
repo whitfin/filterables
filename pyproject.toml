@@ -23,12 +23,15 @@ dev = [
     "ruff~=0.12"
 ]
 
+[project.license]
+file = "LICENSE"
+
 [[project.authors]]
 name = "Isaac Whitfield"
 email = "iw@whitfin.io"
 
-[project.license]
-file = "LICENSE"
-
 [project.urls]
 homepage = "https://whitfin.io"
+
+[tool.ruff]
+line-length = 120
