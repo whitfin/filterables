@@ -89,19 +89,20 @@ class Paginator(Filterable):
                     break
 
         # apply the page limit, the page offset, and the column ordering
-        resource_query = query.limit(self.limit).offset(self.offset)
-        resource_value = session.exec(resource_query).all() if self.limit > 0 else []
+        model_exec = query.limit(self.limit).offset(self.offset)
+        model_rows = session.exec(model_exec).all() if self.limit > 0 else []
 
         # create a count query based on the resource query
-        count_query = resource_query.with_only_columns(func.count(model.path("id"))).offset(0).limit(1).order_by(None)
-        count_value = session.exec(count_query).first()  # type: ignore[call-overload]
+        meta_trim = model_exec.with_only_columns(func.count(model.path("id")))
+        meta_exec = meta_trim.offset(0).limit(1).order_by(None)
+        meta_rows = session.exec(meta_exec).first()  # type: ignore[call-overload]
 
         # execute and summarize
         return Pagination(
-            count=next(_map_rows([count_value], int)),
+            count=next(_map_rows([meta_rows], int)),
             params=self,
             filters=getattr(query, "_filterables", Filters({})),  # type: ignore[arg-type]
-            results=[model.drop(self.excludes) for model in _map_rows(resource_value, model)],
+            results=[model.drop(self.excludes) for model in _map_rows(model_rows, model)],
         )
 
 

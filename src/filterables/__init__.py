@@ -40,7 +40,8 @@ class Filterable(BaseModel):
         """
         Drop a list of excluded fields from a Filterable.
         """
-        for path in paths:
+        # split paths into segments before processing
+        for path in (path.split(".") for path in paths):
             base = self
             length = len(path)
 
