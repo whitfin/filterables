@@ -1,0 +1,32 @@
+# Build folders
+*.egg-info/
+build/
+
+# Python caches
+**/__pycache__/
+.pytest_cache/
+
+# Editor configs
+.vscode/
+notebooks/
+
+# Environment tooling
+.venv/
+mise.toml
+
+# Coverage reporting
+.coverage
+coverage/
+
+# Mac files
+/**/.DS_Store
+
+# SQlite files
+**/*.db*
+
+# Test scripts
+/test.py
+
+# uv pip install
+uv.lock
+
