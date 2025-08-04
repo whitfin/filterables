@@ -35,3 +35,20 @@ homepage = "https://whitfin.io"
 
 [tool.ruff]
 line-length = 120
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+pythonpath = ["."]
+python_files = [
+    "tests/**/test.py",
+    "tests/**/test_*.py"
+]
+filterwarnings = []
+addopts = [
+    "--import-mode=importlib",
+    "--cov=src",
+    "--cov-report=html:coverage",
+    "--cov-report=json:coverage/report.json",
+    "--cov-report=xml:coverage/cobertura-coverage.xml"
+]
+env = []

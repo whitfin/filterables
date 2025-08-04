@@ -7,11 +7,6 @@ get you up and running with filtering and pagination quickly. By providing
 bindings for FastAPI, `filterables` makes it quick and easy to transform query
 parameters into filters inside your SQLModel queries.
 
-The initial version of this project supports SQLite, MySQL and MariaDB drivers
-for SQLModel. Support for PostgreSQL is tentative and may work as-is, depending
-on which features you use. The easiest way is to try it out and file issues as
-needed!
-
 ## Installation
 
 To get started with `filterables`, install it from this repository:
@@ -284,7 +279,7 @@ class MySorter(Sorter):
         return 1
 
     @classmethod
-    def apply(cls, value: str, model: type[Filterable], query, session) -> SelectOfScalar[Filterable] | None:
+    def apply(cls, value: str, model: type[Filterable], *args) -> SelectOfScalar[Filterable] | None:
         """
         Apply our Sorter to the current query.
         """
@@ -317,3 +312,8 @@ parameter, it should return `None`.
 Please note that SQLModel is still fairly new, and does not have a commitment to a
 specific API yet. As such this project will remain in the 0.x version line and has
 limited typing support due to the wide use of `Any` in SQLModel.
+
+The current version of this project supports SQLite, MySQL and MariaDB drivers
+for SQLModel. Support for PostgreSQL is tentative and may work as-is, depending
+on which features you use. The easiest way is to try it out and file issues as
+needed!

@@ -1,0 +1,23 @@
+{
+    "id": "{{ objectId() }}",
+    "age": {{ integer(start=20, end=80) }},
+    "name": "{{ name() }}",
+
+    {% set tmp_email = email() %}
+    {% set tmp_latitude = latitude() %}
+    {% set tmp_longitude = longitude() %}
+    {% set tmp_registered = bool() %}
+
+    "loose": {
+        "email": "{{ tmp_email }}",
+        "latitude": {{ tmp_latitude }},
+        "longitude": {{ tmp_longitude }},
+        "registered": {{ tmp_registered }}
+    },
+    "strong": {
+        "email": "{{ tmp_email }}",
+        "latitude": {{ tmp_latitude }},
+        "longitude": {{ tmp_longitude }},
+        "registered": {{ tmp_registered }}
+    }
+}
