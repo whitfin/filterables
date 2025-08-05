@@ -71,9 +71,7 @@ jobs:
       maria:
         image: mariadb:11.8
         env:
-          MARIA_USER: test
-          MARIA_PASSWORD: test
-          MARIA_DATABASE: test
+          MARIADB_ROOT_PASSWORD: root
         ports:
           - 6033:3306
         options: >-
@@ -84,9 +82,7 @@ jobs:
       mysql:
         image: mysql:8.4
         env:
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test
-          MYSQL_DATABASE: test
+          MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
         options: >-
@@ -97,12 +93,12 @@ jobs:
     strategy:
       matrix:
         database:
+          - name: MariaDB
+            location: mysql+pymysql://root:root@localhost:6033/mysql
+          - name: MySQL
+            location: mysql+pymysql://root:root@localhost:3306/mysql
           - name: SQLite
             location: sqlite://
-          - name: MariaDB
-            location: mysql+pymysql://test:test@localhost:6033/test
-          - name: MySQL
-            location: mysql+pymysql://test:test@localhost:3306/test
         python:
           - "3.13"
           - "3.12"
