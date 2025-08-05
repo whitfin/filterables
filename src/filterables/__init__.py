@@ -80,7 +80,7 @@ class Filterable(BaseModel):
         """
         Transform nested types to their corresponding models.
         """
-        for field, definition in self.model_fields.items():
+        for field, definition in self.__class__.model_fields.items():
             # skip cases like list[str] (not nested)
             if not isclass(definition.annotation):
                 continue
