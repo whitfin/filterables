@@ -1,3 +1,5 @@
+import os
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -37,23 +39,19 @@ def engine() -> Engine:
     """
     Connect to a local SQLite engine for test purposes.
     """
-    from sqlmodel.pool import StaticPool
+    uri = os.environ.get("FILTERABLES_DATABASE_URI")
+    echo = os.environ.get("FILTERABLES_DATABASE_DEBUG") != "0"
+    param = {}
 
-    engine = create_engine(
-        "sqlite://",
-        echo=False,
-        poolclass=StaticPool,
-        connect_args={
+    if re.match(r"^sqlite://(^/|$)", uri):
+        from sqlmodel.pool import StaticPool
+
+        param["poolclass"] = StaticPool
+        param["connect_args"] = {
             "check_same_thread": False,
-        },
-    )
+        }
 
-    with engine.connect() as connection:
-        connection.execute(text("PRAGMA foreign_keys = ON"))
-        connection.execute(text("PRAGMA journal_mode = WAL"))
-        connection.commit()
-
-    return engine
+    return create_engine(uri, echo=echo, **param)
 
 
 @pytest.fixture

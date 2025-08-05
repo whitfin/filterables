@@ -64,12 +64,46 @@ jobs:
       - name: Run Ruff
         run: uv run ruff check
 
-  test:
+  tests:
     name: Testing
     runs-on: ubuntu-latest
+    services:
+      maria:
+        image: mariadb:11.8
+        env:
+          MARIA_USER: test
+          MARIA_PASSWORD: test
+          MARIA_DATABASE: test
+        ports:
+          - 6033:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+          MYSQL_DATABASE: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
     strategy:
       matrix:
-        python-version:
+        database:
+          - name: SQLite
+            location: sqlite://
+          - name: MariaDB
+            location: mysql+pymysql://test:test@localhost:6033/test
+          - name: MySQL
+            location: mysql+pymysql://test:test@localhost:3306/test
+        python:
           - "3.13"
           - "3.12"
           - "3.11"
@@ -81,12 +115,14 @@ jobs:
       - name: Setup Python
         uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python }}
 
       - name: Install Dependencies
         run: |
           uv venv
           uv pip install .[dev]
 
-      - name: Run Pytest
+      - name: Run Tests
         run: uv run pytest -vvv -s
+        env:
+          FILTERABLES_DATABASE_URI: ${{ matrix.database.location }}
