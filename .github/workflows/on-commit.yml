@@ -107,7 +107,7 @@ jobs:
           FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:6033/mysql
 
   test-mssql:
-    name: Testing (MS SQL)
+    name: Testing (MSSQL)
     runs-on: ubuntu-latest
     strategy:
       matrix:

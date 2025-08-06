@@ -87,7 +87,7 @@ class Paginator(Filterable):
         # append every sort field
         for sorting in self.sorting:
             for sorter in sorts:
-                if (value := sorter.apply(sorting, model, query, session)) is not None:
+                if (value := sorter.sort(session, query, model, sorting)) is not None:
                     query = value
                     break
 

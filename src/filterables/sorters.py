@@ -24,8 +24,8 @@ class Sorter(ABC):
 
     @classmethod
     @abstractmethod
-    def apply(
-        cls, value: str, model: type[Filterable], query: SelectOfScalar[Filterable], session: Session
+    def sort(
+        cls, session: Session, query: SelectOfScalar[Filterable], model: type[Filterable], sorting: str
     ) -> SelectOfScalar[Filterable] | None:
         """
         Apply this sorter to the current query.
@@ -45,24 +45,24 @@ class SimpleSorter(Sorter):
     """
 
     @classmethod
-    def apply(
-        cls, value: str, model: type[Filterable], query: SelectOfScalar[Filterable], session: Session
+    def sort(
+        cls, session: Session, query: SelectOfScalar[Filterable], model: type[Filterable], sorting: str
     ) -> SelectOfScalar[Filterable] | None:
         """
         Apply this sorter to the current query.
         """
         try:
             # allow syntax (field)(:(asc|desc))?
-            field, direction = cls.split(model, value)
+            field, direction = cls.split(model, sorting)
         except AttributeError:  # pragma: no cover
             return None
 
         # filter out null for the sort field
         query = query.where(model.has(field))
-        apply = field.desc() if direction == Direction.DESCENDING else field.asc()
+        sort = field.desc() if direction == Direction.DESCENDING else field.asc()
 
-        # apply sort direction
-        return query.order_by(apply)
+        # sort sort direction
+        return query.order_by(sort)
 
     @classmethod
     def priority(cls) -> int:

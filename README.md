@@ -279,7 +279,7 @@ class MySorter(Sorter):
         return 1
 
     @classmethod
-    def apply(cls, value: str, model: type[Filterable], *args) -> SelectOfScalar[Filterable] | None:
+    def sort(cls, session, query, model, sorting: str) -> SelectOfScalar[Filterable] | None:
         """
         Apply our Sorter to the current query.
         """
