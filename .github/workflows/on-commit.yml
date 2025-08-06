@@ -87,7 +87,7 @@ jobs:
         ports:
           - 1433:1433
         options: >-
-          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'T3$TP4$$' -Q 'SELECT 1'"
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P '%%12EA%%' -Q 'SELECT 1'"
           --health-interval 15s
           --health-timeout 10s
           --health-retries 5
@@ -124,7 +124,7 @@ jobs:
           - name: MariaDB
             location: mysql+pymysql://root:root@localhost:6033/mysql
           - name: MSSQL
-            location: mssql+pymssql://sa:T3$TP4$$@localhost:1433/master
+            location: mssql+pymssql://sa:%%12EA%%@localhost:1433/master
           - name: MySQL
             location: mysql+pymysql://root:root@localhost:3306/mysql
           - name: PostgreSQL
