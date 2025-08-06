@@ -64,17 +64,9 @@ jobs:
       - name: Run Ruff
         run: uv run ruff check
 
-      - name: Run the action
-        uses: potatoqualitee/mssqlsuite@v1.11
-        with:
-          install: sqlengine, sqlclient, sqlpackage, localdb, fulltext, ssis
-          version: 2019
-          sa-password: dbatools.I0
-          show-log: true
-          collation: Latin1_General_BIN
 
   test-maria:
-    name: Testing :: MariaDB
+    name: Testing (MariaDB)
     runs-on: ubuntu-latest
     services:
       maria:
@@ -115,7 +107,7 @@ jobs:
           FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:6033/mysql
 
   test-mssql:
-    name: Testing :: MS SQL
+    name: Testing (MS SQL)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -150,7 +142,7 @@ jobs:
           FILTERABLES_DATABASE_URI: mssql+pymssql://sa:latentai.I0@localhost:1433/tempdb
 
   test-mysql:
-    name: Testing :: MySQL
+    name: Testing (MySQL)
     runs-on: ubuntu-latest
     services:
       maria:
@@ -191,7 +183,7 @@ jobs:
           FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
 
   test-postgresql:
-    name: Testing :: PostgreSQL
+    name: Testing (PostgreSQL)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -232,7 +224,7 @@ jobs:
           FILTERABLES_DATABASE_URI: postgresql+psycopg2://postgres:postgres@localhost:5432/postgres
 
   test-sqlite:
-    name: Testing :: SQLite
+    name: Testing (SQLite)
     runs-on: ubuntu-latest
     strategy:
       matrix:
