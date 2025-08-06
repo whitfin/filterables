@@ -75,7 +75,7 @@ class Paginator(Filterable):
         )
 
     def exec(
-        self, session: Session, query: SelectOfScalar[Filterable], filters: Filters = None
+        self, session: Session, query: SelectOfScalar[Filterable], filters: Filters | None = None
     ) -> Pagination[Filterable]:
         """
         Run a Paginator using a query to generate a Pagination.

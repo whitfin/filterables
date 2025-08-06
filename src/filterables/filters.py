@@ -178,13 +178,15 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
 
             # find JSON nest
             if len(split) > 1:
+                dialect = session.bind.dialect.name  # type: ignore[union-attr]
+
                 # support the Postgres way of nesting values
-                if session.bind.dialect.name == "postgresql":
+                if dialect == "postgresql":
                     field = text(split[0] + "#>>'{\"" + '","'.join(split[1:]) + "\"}'")
 
                 # handle users of json_value and json_extract...
                 else:
-                    named = "JSON_VALUE" if session.bind.dialect.name in ["mssql", "oracle"] else "json_extract"
+                    named = "JSON_VALUE" if dialect in ["mssql", "oracle"] else "json_extract"
                     field = getattr(func, named)(field, '$."' + '"."'.join(split[1:]) + '"')
 
             # bind the query Filters
