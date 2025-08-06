@@ -1,8 +1,7 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Union
 
 from pydantic import Field, RootModel
-from sqlalchemy import not_
 from sqlmodel import REAL, Session, cast, func, text
 from sqlmodel.sql.expression import SelectOfScalar
 from typing_extensions import Annotated
@@ -15,12 +14,11 @@ class Filter(Filterable, ABC, extra="forbid"):
     Abstract base model for all filter leaf Filters.
     """
 
-    @abstractmethod
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query  # pragma: no cover
+        return []
 
 
 class FilterBetween(Filter):
@@ -31,11 +29,11 @@ class FilterBetween(Filter):
     lower: int | float = Field(alias="$gt")
     upper: int | float = Field(alias="$lt")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(cast(field, REAL) > self.lower).where(cast(field, REAL) < self.upper)
+        return [cast(field, REAL) > self.lower, cast(field, REAL) < self.upper]
 
 
 class FilterEquals(Filter):
@@ -45,11 +43,11 @@ class FilterEquals(Filter):
 
     value: Any = Field(alias="$eq")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(field == self.value)
+        return [field == self.value]
 
 
 class FilterGreaterThan(Filter):
@@ -59,11 +57,11 @@ class FilterGreaterThan(Filter):
 
     value: int | float = Field(alias="$gt")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(cast(field, REAL) > self.value)
+        return [cast(field, REAL) > self.value]
 
 
 class FilterHas(Filter):
@@ -73,11 +71,11 @@ class FilterHas(Filter):
 
     value: bool = Field(alias="$has")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(field != None) if self.value else query.where(field == None)  # noqa: E711
+        return [field != None if self.value else field == None]  # noqa: E711
 
 
 class FilterIn(Filter):
@@ -87,11 +85,11 @@ class FilterIn(Filter):
 
     value: list[Any] = Field(alias="$in")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(field.in_(list(self.value)))
+        return [field.in_(list(self.value))]
 
 
 class FilterLike(Filter):
@@ -101,11 +99,11 @@ class FilterLike(Filter):
 
     value: str = Field(alias="$like")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(field.ilike(self.value))
+        return [field.ilike(self.value)]
 
 
 class FilterLessThan(Filter):
@@ -115,11 +113,11 @@ class FilterLessThan(Filter):
 
     value: int | float = Field(alias="$lt")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(cast(field, REAL) < self.value)
+        return [cast(field, REAL) < self.value]
 
 
 class FilterNotEquals(Filter):
@@ -129,11 +127,11 @@ class FilterNotEquals(Filter):
 
     value: Any = Field(alias="$ne")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(field != self.value)
+        return [field != self.value]
 
 
 class FilterNotIn(Filter):
@@ -143,11 +141,25 @@ class FilterNotIn(Filter):
 
     value: list[Any] = Field(alias="$nin")
 
-    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
         """
         Bind a filter to a resource query.
         """
-        return query.where(not_(field.in_(list(self.value))))
+        return [~field.in_(list(self.value))]
+
+
+class FilterUnlike(Filter):
+    """
+    Filter to compare against a pattern ($unlike).
+    """
+
+    value: str = Field(alias="$unlike")
+
+    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+        """
+        Bind a filter to a resource query.
+        """
+        return [~field.ilike(self.value)]
 
 
 # the typing here looks scary, but it's just {"x.y.z" => Filter} defined using the Filter impls
@@ -189,8 +201,9 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
                     named = "JSON_VALUE" if dialect in ["mssql", "oracle"] else "json_extract"
                     field = getattr(func, named)(field, '$."' + '"."'.join(split[1:]) + '"')
 
-            # bind the query Filters
-            query = value.bind(query, field)
+            # bind the filtered clauses
+            for clause in value.bind(field):
+                query = query.where(clause)
 
         # write filters to self for later refs
         setattr(query, "_filterables", self)

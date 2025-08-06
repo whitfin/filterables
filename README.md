@@ -104,6 +104,7 @@ fields required to create them:
 | LessThan    | $lt      | Look for numeric values below an upper bound           |
 | NotEquals   | $ne      | Look for a value based on inequality                   |
 | NotIn       | $nin     | Like $ne but with support for multiple values          |
+| Unlike      | $unlike  | Like $like but with an inverted pattern                |
 
 In almost all cases these operators are passed to SQL directly and will behave
 in the same way your SQL engine would in case of e.g. mismatching types, etc.
