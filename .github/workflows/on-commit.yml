@@ -10,6 +10,60 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.13"
+          - "3.12"
+          - "3.11"
+          - "3.10"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: |
+          uv venv
+          uv pip install .[dev]
+
+      - name: Run Mypy
+        run: uv run mypy src
+
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.13"
+          - "3.12"
+          - "3.11"
+          - "3.10"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Dependencies
+        run: |
+          uv venv
+          uv pip install .[dev]
+
+      - name: Run Ruff
+        run: uv run ruff check
+
   tests:
     name: Testing
     runs-on: ubuntu-latest
@@ -26,10 +80,10 @@ jobs:
           --health-timeout=5s
           --health-retries=3
       mssql:
-        image: mcr.microsoft.com/mssql/server:2019-latest
+        image: mcr.microsoft.com/mssql/server:2025-latest
         env:
           ACCEPT_EULA: Y
-          SA_PASSWORD: '%%12EA%%'
+          MSSQL_SA_PASSWORD: '%%12EA%%'
         ports:
           - 1433:1433
         options: >-
@@ -95,57 +149,3 @@ jobs:
         run: uv run pytest -vvv -s
         env:
           FILTERABLES_DATABASE_URI: ${{ matrix.database.location }}
-
-  format:
-    name: Formatting
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Ruff
-        run: uv run ruff check
-
-  lint:
-    name: Linting
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Mypy
-        run: uv run mypy src
