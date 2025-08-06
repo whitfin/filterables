@@ -87,7 +87,7 @@ jobs:
         ports:
           - 1433:1433
         options: >-
-          --health-cmd='/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P T3$TP4$$ -Q "SELECT 1"'
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'T3$TP4$$' -Q 'SELECT 1'"
           --health-interval 15s
           --health-timeout 10s
           --health-retries 5
