@@ -3,7 +3,7 @@ from typing import Any, Union
 
 from pydantic import Field, RootModel
 from sqlalchemy import not_
-from sqlmodel import REAL, cast, func
+from sqlmodel import REAL, Session, cast, func, text
 from sqlmodel.sql.expression import SelectOfScalar
 from typing_extensions import Annotated
 
@@ -16,9 +16,9 @@ class Filter(Filterable, ABC, extra="forbid"):
     """
 
     @abstractmethod
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query  # pragma: no cover
 
@@ -31,9 +31,9 @@ class FilterBetween(Filter):
     lower: int | float = Field(alias="$gt")
     upper: int | float = Field(alias="$lt")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(cast(field, REAL) > self.lower).where(cast(field, REAL) < self.upper)
 
@@ -45,9 +45,9 @@ class FilterEquals(Filter):
 
     value: Any = Field(alias="$eq")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(field == self.value)
 
@@ -59,9 +59,9 @@ class FilterGreaterThan(Filter):
 
     value: int | float = Field(alias="$gt")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(cast(field, REAL) > self.value)
 
@@ -73,9 +73,9 @@ class FilterHas(Filter):
 
     value: bool = Field(alias="$has")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(field != None) if self.value else query.where(field == None)  # noqa: E711
 
@@ -87,9 +87,9 @@ class FilterIn(Filter):
 
     value: list[Any] = Field(alias="$in")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(field.in_(list(self.value)))
 
@@ -101,9 +101,9 @@ class FilterLike(Filter):
 
     value: str = Field(alias="$like")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(field.ilike(self.value))
 
@@ -115,9 +115,9 @@ class FilterLessThan(Filter):
 
     value: int | float = Field(alias="$lt")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(cast(field, REAL) < self.value)
 
@@ -129,9 +129,9 @@ class FilterNotEquals(Filter):
 
     value: Any = Field(alias="$ne")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(field != self.value)
 
@@ -143,9 +143,9 @@ class FilterNotIn(Filter):
 
     value: list[Any] = Field(alias="$nin")
 
-    def attach(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, query: SelectOfScalar[Filterable], field: Any) -> SelectOfScalar[Filterable]:
         """
-        Attach a filter to a resource query.
+        Bind a filter to a resource query.
         """
         return query.where(not_(field.in_(list(self.value))))
 
@@ -156,11 +156,11 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
     Bindable implementation to control model filtering.
     """
 
-    def apply(
-        self, query: SelectOfScalar[Filterable], model: type[Filterable] | None = None
+    def bind(
+        self, session: Session, query: SelectOfScalar[Filterable], model: type[Filterable] | None = None
     ) -> SelectOfScalar[Filterable]:
         """
-        Apply filters to the provided query.
+        Bind filters to a provided query.
 
         The model type will be inferred, but you can provide it as an optional
         argument if you hit issues with the automatic detection.
@@ -178,10 +178,17 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
 
             # find JSON nest
             if len(split) > 1:
-                field = func.json_extract(field, '$."' + '"."'.join(split[1:]) + '"')
+                # support the Postgres way of nesting values
+                if session.bind.dialect.name == "postgresql":
+                    field = text(split[0] + "#>>'{\"" + '","'.join(split[1:]) + "\"}'")
 
-            # attach the query Filters
-            query = value.attach(query, field)
+                # handle users of json_value and json_extract...
+                else:
+                    named = "JSON_VALUE" if session.bind.dialect.name in ["mssql", "oracle"] else "json_extract"
+                    field = getattr(func, named)(field, '$."' + '"."'.join(split[1:]) + '"')
+
+            # bind the query Filters
+            query = value.bind(query, field)
 
         # write filters to self for later refs
         setattr(query, "_filterables", self)

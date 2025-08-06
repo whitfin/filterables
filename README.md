@@ -83,7 +83,7 @@ filters = Filters({
 query = select(Person)
 
 # apply the filters to the query
-query = filters.apply(query)
+query = filters.bind(session, query)
 
 # execute the query as usual
 value = session.exec(query).all()
@@ -124,7 +124,7 @@ from filterables.pages import Paginator
 query = select(Person)
 
 # apply the filters to the query
-query = filters.apply(query)
+query = filters.bind(session, query)
 
 # paginate people
 pages = Paginator(
@@ -135,6 +135,9 @@ pages = Paginator(
 
 # execute the query, but using a paginator
 value = paginator.exec(session, query)
+
+# OR: you can also combine with filters directly
+value = paginator.exec(session, query, filters)
 ```
 
 Rather than retrieving a full list of people, we'll now get a `Pagination` which
@@ -216,10 +219,7 @@ class Person(Filterable, SQLModel):
 
 @app.get("/person")
 def find_resources(filters: Filters = Depends(filters), paginator: Paginator = Depends(paginate)) -> Pagination[Person]:
-    query = select(Person)
-    query = filters.apply(query)
-
-    return paginator.exec(session, query)
+    return paginator.exec(session, select(Person), filters)
 ```
 
 This will select a filtered page based on query parameters and return the
@@ -261,7 +261,7 @@ There are cases where you might wish to use different sorting, or even sort on a
 virtual field. This can be done by creating a subclass of `Sorter`, which can then
 modify a query dynamically.
 
-A `Sorter` can apply things to the query directly, such as virtual columns. In the
+A `Sorter` can attach things to the query directly, such as virtual columns. In the
 simplest case, we could sort using a `<field>_<direction>` syntax as follows:
 
 ```python

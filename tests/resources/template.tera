@@ -1,5 +1,5 @@
 {
-    "id": "{{ objectId() }}",
+    "id": "{{ index() }}",
     "age": {{ integer(start=20, end=80) }},
     "name": "{{ name() }}",
 

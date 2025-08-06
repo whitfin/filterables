@@ -27,7 +27,7 @@ class Person(Filterable, SQLModel, table=True):
     Basic filterable class for test purposes.
     """
 
-    id: str = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     age: int
     name: str
     loose: PersonMetadata = Nestable(Jsonable)

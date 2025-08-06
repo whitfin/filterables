@@ -74,10 +74,13 @@ class Paginator(Filterable):
             **kwargs,
         )
 
-    def exec(self, session: Session, query: SelectOfScalar[Filterable]) -> Pagination[Filterable]:
+    def exec(
+        self, session: Session, query: SelectOfScalar[Filterable], filters: Filters = None
+    ) -> Pagination[Filterable]:
         """
         Run a Paginator using a query to generate a Pagination.
         """
+        query = filters.bind(session, query) if filters else query
         model = Filterable.from_query(query)
         sorts = sorted(Sorter.__subclasses__(), key=lambda sorter: sorter.priority())
 

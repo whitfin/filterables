@@ -18,6 +18,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "mypy~=1.17",
+    "psycopg2~=2.9",
+    "pymssql~=2.3",
     "PyMySQL[rsa]~=1.1",
     "pytest~=8.3",
     "pytest-cov~=6.0",

@@ -79,6 +79,18 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: T3$TP4$$
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P T3$TP4$$ -Q 'SELECT 1'"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 5
       mysql:
         image: mysql:8.4
         env:
@@ -90,20 +102,35 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     strategy:
       matrix:
-        database:
-          - name: MariaDB
-            location: mysql+pymysql://root:root@localhost:6033/mysql
-          - name: MySQL
-            location: mysql+pymysql://root:root@localhost:3306/mysql
-          - name: SQLite
-            location: sqlite://
         python:
           - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
+        database:
+          - name: MariaDB
+            location: mysql+pymysql://root:root@localhost:6033/mysql
+          - name: MSSQL
+            location: mssql+pymssql://sa:T3$TP4$$@localhost:1433/master
+          - name: MySQL
+            location: mysql+pymysql://root:root@localhost:3306/mysql
+          - name: PostgreSQL
+            location: postgresql+psycopg2://postgres:postgres@localhost:5432/postgres
+          - name: SQLite
+            location: sqlite://
     steps:
       - name: Checkout
         uses: actions/checkout@v4
