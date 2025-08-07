@@ -1,23 +1,37 @@
+{% set psn_id = index() %}
+{% set psn_age = integer(start=18, end=100) %}
+{% set psn_name = name() %}
+{% set psn_email = email() %}
+{% set psn_active = bool() %}
+{% set psn_include = get_random(end=2) %}
+
 {
-    "id": "{{ index() }}",
-    "age": {{ integer(start=20, end=80) }},
-    "name": "{{ name() }}",
-
-    {% set tmp_email = email() %}
-    {% set tmp_latitude = latitude() %}
-    {% set tmp_longitude = longitude() %}
-    {% set tmp_registered = bool() %}
-
-    "loose": {
-        "email": "{{ tmp_email }}",
-        "latitude": {{ tmp_latitude }},
-        "longitude": {{ tmp_longitude }},
-        "registered": {{ tmp_registered }}
+    "id": {{ psn_id }},
+    "age": {{ psn_age }},
+    "name": "{{ psn_name }}",
+    "email": "{{ psn_email }}",
+    "active": {{ psn_active }},
+    {% if psn_include == 1 %}
+    "include": true,
+    {% endif %}
+    "jsonable": {
+        "id": {{ psn_id }},
+        "age": {{ psn_age }},
+        "name": "{{ psn_name }}",
+        "email": "{{ psn_email }}",
+        "active": {{ psn_active }}
+        {% if psn_include == 1 %}
+        ,"include": true
+        {% endif %}
     },
-    "strong": {
-        "email": "{{ tmp_email }}",
-        "latitude": {{ tmp_latitude }},
-        "longitude": {{ tmp_longitude }},
-        "registered": {{ tmp_registered }}
+    "nestable": {
+        "id": {{ psn_id }},
+        "age": {{ psn_age }},
+        "name": "{{ psn_name }}",
+        "email": "{{ psn_email }}",
+        "active": {{ psn_active }}
+        {% if psn_include == 1 %}
+        ,"include": true
+        {% endif %}
     }
 }

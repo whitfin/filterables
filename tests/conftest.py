@@ -11,27 +11,28 @@ from filterables import Filterable
 from filterables.fields import Jsonable, Nestable
 
 
-class PersonMetadata(Filterable):
+class PersonNestable(Filterable):
     """
     Basic nestable class for test purposes.
     """
 
+    id: int
+    age: int
+    name: str
     email: str
-    latitude: float
-    longitude: float
-    registered: bool
+    active: bool
+    include: bool | None = None
 
 
-class Person(Filterable, SQLModel, table=True):
+class Person(PersonNestable, SQLModel, table=True):
     """
     Basic filterable class for test purposes.
     """
 
     id: int = Field(default=None, primary_key=True)
-    age: int
-    name: str
-    loose: PersonMetadata = Nestable(Jsonable)
-    strong: PersonMetadata = Nestable(PersonMetadata)
+
+    jsonable: Jsonable = Nestable(Jsonable)
+    nestable: PersonNestable = Nestable(PersonNestable)
 
 
 @lru_cache
