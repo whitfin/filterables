@@ -9,14 +9,15 @@ on:
       - main
   workflow_dispatch:
 
-strategy: &strategy
-  fail-fast: false
-  matrix:
-    python-version:
-      - "3.13"
-      - "3.12"
-      - "3.11"
-      - "3.10"
+env:
+  strategy: &strategy
+    fail-fast: false
+    matrix:
+      python-version:
+        - "3.13"
+        - "3.12"
+        - "3.11"
+        - "3.10"
 
 jobs:
   lint:
