@@ -3,7 +3,7 @@ from typing import Any, Union
 
 from pydantic import Field, RootModel
 from sqlmodel import REAL, Session, cast, func, text
-from sqlmodel.sql.expression import SelectOfScalar
+from sqlmodel.sql.expression import ColumnElement, SelectOfScalar
 from typing_extensions import Annotated
 
 from filterables import Filterable
@@ -14,7 +14,7 @@ class Filter(Filterable, ABC, extra="forbid"):
     Abstract base model for all filter leaf Filters.
     """
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -29,7 +29,7 @@ class FilterBetween(Filter):
     lower: int | float = Field(alias="$gt")
     upper: int | float = Field(alias="$lt")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -43,7 +43,7 @@ class FilterEquals(Filter):
 
     value: Any = Field(alias="$eq")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -57,7 +57,7 @@ class FilterGreaterThan(Filter):
 
     value: int | float = Field(alias="$gt")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -71,7 +71,7 @@ class FilterHas(Filter):
 
     value: bool = Field(alias="$has")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -85,7 +85,7 @@ class FilterIn(Filter):
 
     value: list[Any] = Field(alias="$in")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -99,7 +99,7 @@ class FilterLike(Filter):
 
     value: str = Field(alias="$like")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -113,7 +113,7 @@ class FilterLessThan(Filter):
 
     value: int | float = Field(alias="$lt")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -127,7 +127,7 @@ class FilterNotEquals(Filter):
 
     value: Any = Field(alias="$ne")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -141,7 +141,7 @@ class FilterNotIn(Filter):
 
     value: list[Any] = Field(alias="$nin")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
@@ -155,7 +155,7 @@ class FilterUnlike(Filter):
 
     value: str = Field(alias="$unlike")
 
-    def bind(self, field: Any) -> SelectOfScalar[Filterable]:
+    def bind(self, field: Any) -> list[ColumnElement[bool]]:
         """
         Bind a filter to a resource query.
         """
