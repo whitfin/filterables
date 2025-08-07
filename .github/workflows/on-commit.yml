@@ -24,14 +24,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy: *strategy
     steps:
-    - uses: actions/checkout@v4
-      with:
-        lfs: true
-    - uses: astral-sh/setup-uv@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-    - run: uv venv
-    - run: uv pip install .[dev]
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv venv
+      - run: uv pip install .[dev]
       - run: uv run mypy src
 
   format:
@@ -124,9 +124,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv venv
       - run: uv pip install .[dev]
-        - run: uv run pytest -vvv -s
-          env:
-            FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
+      - run: uv run pytest -vvv -s
+        env:
+          FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
 
   test-postgresql:
     name: Testing (PostgreSQL)
