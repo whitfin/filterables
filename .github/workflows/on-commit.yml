@@ -9,21 +9,18 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  strategy: &strategy
-    fail-fast: false
-    matrix:
-      python-version:
-        - "3.13"
-        - "3.12"
-        - "3.11"
-        - "3.10"
-
 jobs:
   lint:
     name: Linting
     runs-on: ubuntu-latest
-    strategy: *strategy
+    strategy: &strategy
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.13"
+          - "3.12"
+          - "3.11"
+          - "3.10"
     steps:
       - uses: actions/checkout@v4
         with:
