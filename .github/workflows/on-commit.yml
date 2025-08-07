@@ -9,69 +9,50 @@ on:
       - main
   workflow_dispatch:
 
+strategy: &strategy
+  fail-fast: false
+  matrix:
+    python-version:
+      - "3.13"
+      - "3.12"
+      - "3.11"
+      - "3.10"
+
 jobs:
   lint:
     name: Linting
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
+    strategy: *strategy
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Mypy
-        run: uv run mypy src
+    - uses: actions/checkout@v4
+      with:
+        lfs: true
+    - uses: astral-sh/setup-uv@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+    - run: uv venv
+    - run: uv pip install .[dev]
+      - run: uv run mypy src
 
   format:
     name: Formatting
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
+    strategy: *strategy
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Ruff
-        run: uv run ruff check
-
+      - run: uv venv
+      - run: uv pip install .[dev]
+      - run: uv run ruff check
 
   test-maria:
     name: Testing (MariaDB)
     runs-on: ubuntu-latest
+    strategy: *strategy
     services:
       maria:
         image: mariadb:11.8
@@ -84,74 +65,44 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-    strategy:
-      matrix:
-        python:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Tests
-        run: uv run pytest -vvv -s
+          python-version: ${{ matrix.python-version }}
+      - run: uv venv
+      - run: uv pip install .[dev]
+      - run: uv run pytest -vvv -s
         env:
           FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:6033/mysql
 
   test-mssql:
     name: Testing (MSSQL)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
+    strategy: *strategy
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Install SQL Server
-        uses: potatoqualitee/mssqlsuite@v1.11
+          python-version: ${{ matrix.python-version }}
+      - run: uv venv
+      - run: uv pip install .[dev]
+      - uses: potatoqualitee/mssqlsuite@v1.11
         with:
           install: sqlengine
           sa-password: latentai.I0
-
-      - name: Run Tests
-        run: uv run pytest -vvv -s
+      - run: uv run pytest -vvv -s
         env:
           FILTERABLES_DATABASE_URI: mssql+pymssql://sa:latentai.I0@localhost:1433/tempdb
 
   test-mysql:
     name: Testing (MySQL)
     runs-on: ubuntu-latest
+    strategy: *strategy
     services:
       maria:
         image: mysql:8.4
@@ -164,37 +115,23 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
-    strategy:
-      matrix:
-        python:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Tests
-        run: uv run pytest -vvv -s
-        env:
-          FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
+          python-version: ${{ matrix.python-version }}
+      - run: uv venv
+      - run: uv pip install .[dev]
+        - run: uv run pytest -vvv -s
+          env:
+            FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
 
   test-postgresql:
     name: Testing (PostgreSQL)
     runs-on: ubuntu-latest
+    strategy: *strategy
     services:
       postgres:
         image: postgres:17
@@ -207,59 +144,30 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-    strategy:
-      matrix:
-        python:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Tests
-        run: uv run pytest -vvv -s
+          python-version: ${{ matrix.python-version }}
+      - run: uv venv
+      - run: uv pip install .[dev]
+      - run: uv run pytest -vvv -s
         env:
           FILTERABLES_DATABASE_URI: postgresql+psycopg2://postgres:postgres@localhost:5432/postgres
 
   test-sqlite:
     name: Testing (SQLite)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python:
-          - "3.13"
-          - "3.12"
-          - "3.11"
-          - "3.10"
+    strategy: *strategy
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Python
-        uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install .[dev]
-
-      - name: Run Tests
-        run: uv run pytest -vvv -s
+          python-version: ${{ matrix.python-version }}
+      - run: uv venv
+      - run: uv pip install .[dev]
+      - run: uv run pytest -vvv -s
