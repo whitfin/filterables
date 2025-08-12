@@ -1,6 +1,7 @@
 from typing import Generic, TypeVar
 
 from pydantic import Field as PydanticField
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import JSON, Column, TypeDecorator
 from sqlmodel import Field as SQLField
 
@@ -39,6 +40,12 @@ class NestableType(TypeDecorator, Generic[FilterableT]):
         """
         super().__init__(*args, **kwargs)
         self.model = model
+
+    def load_dialect_impl(self, dialect):
+        """
+        Select the dialect implementation.
+        """
+        return dialect.type_descriptor(JSONB() if dialect.name == "postgresql" else JSON())
 
     def process_bind_param(self, value, dialect):
         """
