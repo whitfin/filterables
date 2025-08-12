@@ -57,7 +57,7 @@ jobs:
         env:
           MARIADB_ROOT_PASSWORD: root
         ports:
-          - 6033:3306
+          - 3306:3306
         options: >-
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=10s
@@ -74,7 +74,7 @@ jobs:
       - run: uv pip install .[dev]
       - run: uv run pytest -vvv -s
         env:
-          FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:6033/mysql
+          FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
 
   test-mssql:
     name: Testing (MSSQL)
