@@ -1,10 +1,9 @@
 from abc import ABC
-from typing import Any, Callable, Union
+from typing import Callable, Union
 
 from pydantic import Field, RootModel
-from sqlalchemy import Cast
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import JSON, Boolean, Float, Integer, Session, Text, case, cast, func, literal, text
+from sqlmodel import JSON, Boolean, Float, Integer, Session, Text, case, func, literal, text
 from sqlmodel.sql.expression import BinaryExpression, ColumnElement, SelectOfScalar, and_
 from typing_extensions import Annotated
 
@@ -108,18 +107,21 @@ class FilterHas(Filter):
         """
         See Filter.where() for documentation.
         """
+        path = get_child_ref(column, children, dialect)
         value = get_value_ref(column, children, dialect)
         check: _Elem = ~value.is_(None)
 
         if children:
+            match = "null"
+
             if dialect == "sqlite":
-                match: Cast[Any] | str = "null"
+                match = func.json_type(column, path) == "null"
 
             elif dialect == "postgresql":
-                match = cast(None, JSON if isinstance(column.type, JSON) else JSONB)
+                match = func.jsonb_typeof(value) == "null"
 
-            elif dialect == "mysql":
-                match = cast(None, JSON)
+            elif dialect in ["mariadb", "mysql"]:
+                match = func.json_type(value) == "NULL"
 
             check = and_(check, value != match)
 
@@ -562,7 +564,7 @@ def get_value_types(
 
         else:
             # handle MySQL typing
-            typed = func.json_type(value)
+            typed = func.JSON_TYPE(value)
 
             # handle MySQL unquotes for JSON content
             if isinstance(comparable, str):
