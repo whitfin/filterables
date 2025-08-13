@@ -53,6 +53,11 @@ def get_column_type_for_value(value: Comparable) -> set[Any]:
         Set[Any]:
             Returns a set of column types associated with the type of the
             provided value.
+
+    Raises:
+        ValueError:
+            This exception is raised on an invalid type provided. This will not
+            happen internally, it only exists to notify invalid usage.
     """
     if isinstance(value, bool):
         return AnyBool
@@ -120,8 +125,13 @@ def get_json_type_for_value(value: Comparable, dialect: str) -> list[str]:
         list[str]:
             Returns a list of JSON types associated with the type of the
             provided value.
+
+    Raises:
+        ValueError:
+            This exception is raised on an invalid type provided. This will not
+            happen internally, it only exists to notify invalid usage.
     """
     if (types := _json_types.get(dialect)) and (values := types.get(type(value))):
         return values if isinstance(values, list) else [values]
 
-    raise Exception("Unrecognised value type")
+    raise ValueError("Unrecognised value type")

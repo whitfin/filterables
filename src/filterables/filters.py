@@ -13,7 +13,7 @@ from filterables.types import AnyJson, Comparable, get_column_type_for_value, ge
 
 # basic typing to save us writing this over and over
 _Elem = ColumnElement | BinaryExpression
-_Caster = Callable[[ColumnElement | Comparable], ColumnElement]
+_Caster = Callable[[ColumnElement | Comparable], ColumnElement | Comparable]
 _Condition = Callable[[ColumnElement, _Caster], ColumnElement]
 
 
@@ -340,7 +340,7 @@ def create_chain(
 
     # generate the casting function and condition for the guard
     casting = create_caster(column, children, dialect, comparable)
-    updated = condition(casting(value), casting)
+    updated = condition(casting(value), casting)  # type: ignore
     guarded = create_guard(typing, updated)
 
     # guard the call
@@ -386,23 +386,23 @@ def create_caster(column: ColumnElement, children: list[str], dialect: str, comp
 
     # cast comparables to a boolean
     if isinstance(comparable, bool):
-        return lambda value: func.cast(value, Boolean)
+        return lambda value: func.cast(value, Boolean)  # type: ignore
 
     # cast comparables to a float
     if isinstance(comparable, float):
-        return lambda value: func.cast(value, Float)
+        return lambda value: func.cast(value, Float)  # type: ignore
 
     # cast comparables to an integer
     if isinstance(comparable, int):
-        return lambda value: func.cast(value, Integer)
+        return lambda value: func.cast(value, Integer)  # type: ignore
 
     # cast comparables to text,trim JSON quotes
     if isinstance(comparable, str):
-        return lambda value: func.trim(func.cast(value, Text), '"')
+        return lambda value: func.trim(func.cast(value, Text), '"')  # type: ignore
 
     # cast nests to JSON types
     if isinstance(column.type, tuple(AnyJson)):
-        return lambda value: func.cast(value, JSON if isinstance(column.type, JSON) else JSONB)
+        return lambda value: func.cast(value, JSON if isinstance(column.type, JSON) else JSONB)  # type: ignore
 
     # just in case, identity
     return lambda value: value
