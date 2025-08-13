@@ -10,9 +10,17 @@ from filterables import Filterable, FilterableT
 T = TypeVar("T")
 
 
-def Nestable(cls: type[Filterable], *args, **kwargs):
+def Nestable(cls: type[Filterable], *args, **kwargs) -> type[Filterable]:
     """
-    Create a Field to represent an inner Filterable model type.
+    Create a Field to represent an inner `Filterable` model type.
+
+    Args:
+        cls:
+            The `Filterable` type for the inner column.
+
+    Returns:
+        type[Filterable]:
+            Returns a SQLField wrapping of the custom type T.
     """
     value = SQLExampleValue(Jsonable())
     extra = kwargs.pop("schema_extra", value)
@@ -65,20 +73,36 @@ class NestableType(TypeDecorator, Generic[FilterableT]):
 
 class Jsonable(Filterable, extra="allow"):
     """
-    Filterable class allowing for arbitrary JSON properties.
+    A `Filterable` implementation allowing for arbitrary JSON properties.
     """
 
 
 def PydanticExampleField(value: T) -> T:
     """
     Create a Pydantic Field with an example value.
+
+    Args:
+        value:
+            The value to use as an example within the field.
+
+    Returns:
+        T:
+            Returns a Pydantic wrapping of the custom type T.
     """
     return PydanticField(examples=PydanticExampleValue(value))
 
 
 def PydanticExampleValue(value: T) -> list[T]:
     """
-    Create a Pydantic example value.
+    Create a Pydantic example from a custom value.
+
+    Args:
+        value:
+            The value to create the field for.
+
+    Returns:
+        list[T]:
+            Return a list to serve as a Pydantic compatible example.
     """
     return [value]
 
@@ -86,12 +110,28 @@ def PydanticExampleValue(value: T) -> list[T]:
 def SQLExampleField(value: T, **kwargs) -> T:
     """
     Create a SQL Field with an example value.
+
+    Args:
+        value:
+            The value to use as an example within the field.
+
+    Returns:
+        T:
+            Returns a SQLField wrapping of the custom type T.
     """
     return SQLField(schema_extra=SQLExampleValue(value), **kwargs)
 
 
 def SQLExampleValue(value: T) -> dict[str, list[T]]:
     """
-    Create a SQL example value.
+    Create a SQL example from a custom value.
+
+    Args:
+        value:
+            The value to create the field for.
+
+    Returns:
+        dict[str, list[T]]:
+            Return a dictionary to serve as a SQL compatible example.
     """
     return {"examples": [value]}
