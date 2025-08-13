@@ -112,8 +112,6 @@ class FilterHas(Filter):
         check: _Elem = ~value.is_(None)
 
         if children:
-            match = "null"
-
             if dialect == "sqlite":
                 match = func.json_type(column, path) == "null"
 
@@ -123,7 +121,10 @@ class FilterHas(Filter):
             elif dialect in ["mariadb", "mysql"]:
                 match = func.json_type(value) == "NULL"
 
-            check = and_(check, value != match)
+            else:
+                match = value != "null"
+
+            check = and_(check, match)
 
         return check if self.value else ~check
 
