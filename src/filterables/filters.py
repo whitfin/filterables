@@ -185,7 +185,7 @@ class FilterNotEquals(Filter):
         """
         See Filter.where() for documentation.
         """
-        return ~FilterEquals.model_validate({"$eq": self.value}).bind(column, children, dialect)
+        return ~FilterEquals.model_validate({"$eq": self.value}).create(column, children, dialect)
 
 
 class FilterNotIn(Filter):
@@ -199,7 +199,7 @@ class FilterNotIn(Filter):
         """
         See Filter.where() for documentation.
         """
-        return ~FilterIn.model_validate({"$in": self.value}).bind(column, children, dialect)
+        return ~FilterIn.model_validate({"$in": self.value}).create(column, children, dialect)
 
 
 class FilterUnlike(Filter):
@@ -213,7 +213,7 @@ class FilterUnlike(Filter):
         """
         See Filter.where() for documentation.
         """
-        return ~FilterLike.model_validate({"$like": self.value}).bind(column, children, dialect)
+        return ~FilterLike.model_validate({"$like": self.value}).create(column, children, dialect)
 
 
 # the typing here looks scary, but it's just {"x.y.z" => Filter} defined using the Filter impls
