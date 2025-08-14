@@ -577,7 +577,7 @@ def get_value_types(
             return value, typing
 
         # generate a clause to verify the field has the correct type
-        typing = typed.in_(get_json_type_for_value(comparable, dialect))
+        typing = typed.in_(get_json_type_for_value(dialect, comparable))
 
     # return both params
     return value, typing

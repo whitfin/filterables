@@ -86,6 +86,12 @@ _json_types: dict[str, dict[type, str | list[str]]] = {
         int: "integer",
         str: "text",
     },
+    "mariadb": {
+        bool: "BOOLEAN",
+        float: "DOUBLE",
+        int: "INTEGER",
+        str: "STRING",
+    },
     "mysql": {
         bool: "BOOLEAN",
         float: "DOUBLE",
@@ -113,7 +119,7 @@ _json_types: dict[str, dict[type, str | list[str]]] = {
 }
 
 
-def get_json_type_for_value(value: Comparable, dialect: str) -> list[str]:
+def get_json_type_for_value(dialect: str, value: Comparable) -> list[str]:
     """
     Fetch the applicable JSON types for the provided value and dialect.
 

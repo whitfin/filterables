@@ -74,7 +74,7 @@ jobs:
       - run: uv pip install .[dev]
       - run: uv run pytest -s -vvv
         env:
-          FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
+          FILTERABLES_DATABASE_URI: mariadb+pymysql://root:root@localhost:3306/mysql
 
   test-mssql:
     name: Testing (MSSQL) (WIP)
