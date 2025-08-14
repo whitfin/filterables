@@ -6,13 +6,10 @@ from pydantic import Field, field_serializer
 from sqlmodel import Session, func
 from sqlmodel.sql.expression import SelectOfScalar, Sequence
 
-from filterables import Filterable, FilterableT
-from filterables.fields import (
-    Jsonable,
-    PydanticExampleField,
-)
+from filterables import Filterable, FilterableT, Jsonable
 from filterables.filters import Filters
 from filterables.sorters import Sorter
+from filterables.types import PydanticExampleField
 
 T = TypeVar("T")
 
@@ -30,7 +27,7 @@ class Pagination(Filterable, Generic[FilterableT]):
     @field_serializer("filters")
     def serialize_filters(self, filters: Filters):
         """
-        Aliased model serializer for filters.
+        Aliased model serializer for `Filters`.
         """
         return {key: value.model_dump(by_alias=True) for key, value in filters.root.items()}
 

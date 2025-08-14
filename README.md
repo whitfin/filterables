@@ -118,7 +118,6 @@ If we look at how we'd add pagination to the filtered example above, we can see 
 it's very straightforward:
 
 ```python
-# ...
 from filterables.pages import Paginator
 
 # select all people
@@ -163,7 +162,7 @@ Filterables provides access to the `Nestable` column type for SQLModel, which
 enables storing inner documents within a JSON column:
 
 ```python
-from filterables.fields import Nestable
+from filterables import Filterable, Nestable
 
 class MyInnerFilterable(Filterable):
     age: int

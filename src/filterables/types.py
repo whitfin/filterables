@@ -1,5 +1,6 @@
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, TypeVar
 
+from pydantic import Field as PydanticField
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import (
     CHAR,
@@ -24,8 +25,9 @@ from sqlmodel import (
     Text,
     Time,
 )
+from sqlmodel import Field as SQLField
 
-from filterables.fields import NestableType
+from filterables import NestedFilterable
 
 # comparable types for use with filtering
 Comparable: TypeAlias = bool | float | int | str
@@ -35,7 +37,7 @@ AnyBool = set([Boolean])
 AnyDate = set([Date, DateTime, Interval, Time, TIMESTAMP])
 AnyFloat = set([DECIMAL, Double, Float, Numeric, REAL])
 AnyInteger = set([BigInteger, Integer, SmallInteger])
-AnyJson = set([JSON, JSONB, NestableType])
+AnyJson = set([JSON, JSONB, NestedFilterable])
 AnyNumber = AnyInteger | AnyFloat
 AnyString = AnyDate | set([AutoString, CHAR, CLOB, String, Text, VARCHAR])
 AnyThing = AnyBool | AnyDate | AnyInteger | AnyFloat | AnyNumber | AnyString
@@ -135,3 +137,66 @@ def get_json_type_for_value(value: Comparable, dialect: str) -> list[str]:
         return values if isinstance(values, list) else [values]
 
     raise ValueError("Unrecognised value type")
+
+
+T = TypeVar("T")
+
+
+def PydanticExampleField(value: T) -> T:
+    """
+    Create a Pydantic Field with an example value.
+
+    Args:
+        value:
+            The value to use as an example within the field.
+
+    Returns:
+        T:
+            Returns a Pydantic wrapping of the custom type T.
+    """
+    return PydanticField(examples=PydanticExampleValue(value))
+
+
+def PydanticExampleValue(value: T) -> list[T]:
+    """
+    Create a Pydantic example from a custom value.
+
+    Args:
+        value:
+            The value to create the field for.
+
+    Returns:
+        list[T]:
+            Return a list to serve as a Pydantic compatible example.
+    """
+    return [value]
+
+
+def SQLExampleField(value: T, **kwargs) -> T:
+    """
+    Create a SQL Field with an example value.
+
+    Args:
+        value:
+            The value to use as an example within the field.
+
+    Returns:
+        T:
+            Returns a SQLField wrapping of the custom type T.
+    """
+    return SQLField(schema_extra=SQLExampleValue(value), **kwargs)
+
+
+def SQLExampleValue(value: T) -> dict[str, list[T]]:
+    """
+    Create a SQL example from a custom value.
+
+    Args:
+        value:
+            The value to create the field for.
+
+    Returns:
+        dict[str, list[T]]:
+            Return a dictionary to serve as a SQL compatible example.
+    """
+    return {"examples": [value]}

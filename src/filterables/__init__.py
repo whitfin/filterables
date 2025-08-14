@@ -1,8 +1,10 @@
 from inspect import isclass
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, model_validator
-from sqlmodel import text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import JSON, Column, TypeDecorator, text
+from sqlmodel import Field as SQLField
 from sqlmodel.sql.expression import ColumnElement, SelectOfScalar
 
 T = TypeVar("T")
@@ -33,7 +35,7 @@ class Filterable(BaseModel):
         """
         field = cls.path(path) if isinstance(path, str) else path
 
-        return field != text("'null'") if isinstance(field.type, NestableType) else field.isnot(None)
+        return field != text("'null'") if isinstance(field.type, NestedFilterable) else field.isnot(None)
 
     @classmethod
     def path(cls, path: str) -> Any:
@@ -154,8 +156,80 @@ class Filterable(BaseModel):
 # define a type variable for use with Generic
 FilterableT = TypeVar("FilterableT", bound=Filterable)
 
-from filterables.fields import Jsonable  # noqa
-from filterables.fields import NestableType  # noqa
 
-# only expose the library types
-__all__ = ["Filterable", "FilterableT"]
+def Nestable(cls: type[Filterable], *args, **kwargs) -> type[Filterable]:
+    """
+    Create a Field to represent an inner `Filterable` model type.
+
+    Args:
+        cls:
+            The `Filterable` type for the inner column.
+
+    Returns:
+        type[Filterable]:
+            Returns a SQLField wrapping of the custom type T.
+    """
+    from filterables.types import SQLExampleValue
+
+    value = SQLExampleValue(Jsonable())
+    extra = kwargs.pop("schema_extra", value)
+
+    return SQLField(
+        *args,
+        default_factory=cls,
+        sa_column=Column(NestedFilterable(cls)),
+        schema_extra=extra,
+        **kwargs,
+    )
+
+
+class NestedFilterable(TypeDecorator, Generic[FilterableT]):
+    """
+    Custom decorator class to allow for nested Filterable models.
+    """
+
+    impl = JSON
+    cache_ok = True
+
+    def __init__(self, model: type[Filterable], *args, **kwargs):
+        """
+        Initialize this decorator using a Pydantic model type.
+        """
+        super().__init__(*args, **kwargs)
+        self.model = model
+
+    def load_dialect_impl(self, dialect):
+        """
+        Select the dialect implementation.
+        """
+        return dialect.type_descriptor(JSONB() if dialect.name == "postgresql" else JSON())
+
+    def process_bind_param(self, value, dialect):
+        """
+        Convert a nested model type to a dictionary.
+        """
+        return value.model_dump() if hasattr(value, "model_dump") else value
+
+    def process_result_value(self, value, dialect):
+        """
+        Convert a dictionary to a nested model type.
+        """
+        if isinstance(value, dict):
+            return self.model(**value) if value else self.model()
+
+        return super().process_result_value(self, value, dialect)
+
+
+class Jsonable(Filterable, extra="allow"):
+    """
+    A `Filterable` implementation allowing for arbitrary JSON properties.
+    """
+
+
+__all__ = [
+    "Filterable",
+    "FilterableT",
+    "Jsonable",
+    "Nestable",
+    "NestedFilterable",
+]

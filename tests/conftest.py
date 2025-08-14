@@ -7,8 +7,7 @@ import pytest
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, text
 
-from filterables import Filterable
-from filterables.fields import Jsonable, Nestable
+from filterables import Filterable, Jsonable, Nestable
 
 
 class PersonNestable(Filterable):
