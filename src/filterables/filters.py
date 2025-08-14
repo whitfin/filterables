@@ -563,6 +563,7 @@ def get_value_types(
             jsonb = "json" if isinstance(column, JSON) else "jsonb"
             typed = getattr(func, f"{jsonb}_typeof")(value)
 
+        # handle the MySQL family
         elif dialect in ["mysql", "mariadb"]:
             # handle MySQL typing
             typed = func.JSON_TYPE(value)
@@ -570,6 +571,10 @@ def get_value_types(
             # handle MySQL unquotes for JSON content
             if isinstance(comparable, str):
                 value = func.json_unquote(value)
+
+        else:
+            # skip anything else
+            return value, typing
 
         # generate a clause to verify the field has the correct type
         typing = typed.in_(get_json_type_for_value(comparable, dialect))
