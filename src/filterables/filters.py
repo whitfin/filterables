@@ -57,7 +57,7 @@ class FilterBetween(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return create_chain(
             column,
@@ -77,7 +77,7 @@ class FilterEquals(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return create_chain(column, children, dialect, self.value, lambda value, cast: value == cast(self.value))
 
@@ -91,7 +91,7 @@ class FilterGreaterThan(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return create_chain(column, children, dialect, self.value, lambda value, cast: value > cast(self.value))
 
@@ -105,7 +105,7 @@ class FilterHas(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         path = get_child_ref(column, children, dialect)
         value = get_value_ref(column, children, dialect)
@@ -138,7 +138,7 @@ class FilterIn(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return create_chain(
             column,
@@ -158,7 +158,7 @@ class FilterLike(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return create_chain(column, children, dialect, self.value, lambda value, cast: value.like(cast(self.value)))
 
@@ -172,7 +172,7 @@ class FilterLessThan(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return create_chain(column, children, dialect, self.value, lambda value, cast: value < cast(self.value))
 
@@ -186,7 +186,7 @@ class FilterNotEquals(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return ~FilterEquals.model_validate({"$eq": self.value}).create(column, children, dialect)
 
@@ -200,7 +200,7 @@ class FilterNotIn(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return ~FilterIn.model_validate({"$in": self.value}).create(column, children, dialect)
 
@@ -214,7 +214,7 @@ class FilterUnlike(Filter):
 
     def create(self, column: ColumnElement, children: list[str], dialect: str) -> _Elem:
         """
-        See Filter.where() for documentation.
+        See Filter.create() for documentation.
         """
         return ~FilterLike.model_validate({"$like": self.value}).create(column, children, dialect)
 

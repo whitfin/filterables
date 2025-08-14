@@ -22,6 +22,14 @@ class Filterable(BaseModel):
     def has(cls, path: str | Any) -> ColumnElement:
         """
         Create a filter for null values in a query, including JSON types.
+
+        Args:
+            path:
+                The path within this model tree to check for existence.
+
+        Returns:
+            ColumnElement:
+                Returns a WHERE clause which can be used within a SELECT query.
         """
         field = cls.path(path) if isinstance(path, str) else path
 
@@ -30,7 +38,16 @@ class Filterable(BaseModel):
     @classmethod
     def path(cls, path: str) -> Any:
         """
-        Retrieve a field reference from a data model by dot-separated path.
+        Retrieve a field reference from a data model, by dot-separated path.
+
+        Args:
+            path:
+                The path within this model tree to search for.
+
+        Returns:
+            Any:
+                Returns the value located at the end of a path. Either a root
+                SQLModel field or a nested JSON reference.
         """
         paths = path.split(".", 1)
         field = getattr(cls, paths[0])
@@ -38,7 +55,17 @@ class Filterable(BaseModel):
 
     def drop(self: T, paths: list[str]) -> T:
         """
-        Drop a list of excluded fields from a Filterable.
+        Drop a list of excluded fields from a `Filterable`.
+
+        Args:
+            paths:
+                The list of paths within this model to replace with a `None`
+                type. Any invalid or missing paths will simply be ignored.
+
+        Returns:
+            T:
+                Returns the current (potentially modified) instance to allow
+                for easy chaining in transformation pipelines.
         """
         # split paths into segments before processing
         for path in (path.split(".") for path in paths):
@@ -75,10 +102,35 @@ class Filterable(BaseModel):
 
         return self
 
+    @classmethod
+    def from_query(cls, query: SelectOfScalar["Filterable"]) -> type["Filterable"]:
+        """
+        Infer a `Filterable` model from a query, if possible.
+
+        Args:
+            query:
+                The `Filterable` SELECT query to infer a model type from.
+
+        Returns:
+            type["Filterable"]:
+                Returns a `Filterable` subclass type, located via the query.
+
+        Raises:
+            ValueError:
+                This exception is raised if a model cannot be inferred. If this
+                happens, the query is likely not a valid `Filterable` selection.
+        """
+        for column in query.column_descriptions:
+            ct = column["type"]
+            if isclass(ct) and issubclass(ct, Filterable):
+                return ct
+
+        raise ValueError("Unable to determine Filterable query model")
+
     @model_validator(mode="after")
     def unpack(self) -> "Filterable":
         """
-        Transform nested types to their corresponding models.
+        Pydantic callback to transform nested types to their Pydantic models.
         """
         for field, definition in self.__class__.model_fields.items():
             # skip cases like list[str] (not nested)
@@ -98,21 +150,12 @@ class Filterable(BaseModel):
 
         return self
 
-    @classmethod
-    def from_query(cls, query: SelectOfScalar["Filterable"]) -> type["Filterable"]:
-        """
-        Infer a Filterable model type from a query, if available.
-        """
-        for column in query.column_descriptions:
-            ct = column["type"]
-            if isclass(ct) and issubclass(ct, Filterable):
-                return ct
-
-        raise Exception("Unable to determine Filterable query model")
-
 
 # define a type variable for use with Generic
 FilterableT = TypeVar("FilterableT", bound=Filterable)
 
 from filterables.fields import Jsonable  # noqa
 from filterables.fields import NestableType  # noqa
+
+# only expose the library types
+__all__ = ["Filterable", "FilterableT"]

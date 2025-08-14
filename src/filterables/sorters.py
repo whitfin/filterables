@@ -10,7 +10,7 @@ from filterables import Filterable
 
 class Direction(str, Enum):
     """
-    Small Enum representing sort direction (ascending or descending).
+    Small enumerable representing sort direction (ascending or descending).
     """
 
     ASCENDING = "asc"
@@ -24,32 +24,62 @@ class Sorter(ABC):
 
     @classmethod
     @abstractmethod
-    def sort(
-        cls, session: Session, query: SelectOfScalar[Filterable], model: type[Filterable], sorting: str
-    ) -> SelectOfScalar[Filterable] | None:
+    def priority(cls) -> int:
         """
-        Apply this sorter to the current query.
+        Retrieve the priority order for this sorter.
+
+        Returns:
+            int:
+                A numeric priority value to determine priority between Sorter
+                implementations. The closer to 0, the higher the priority.
         """
 
     @classmethod
     @abstractmethod
-    def priority(cls) -> int:
+    def sort(
+        cls, session: Session, query: SelectOfScalar[Filterable], model: type[Filterable], sorting: str
+    ) -> SelectOfScalar[Filterable] | None:
         """
-        Retrieve the priority order for this sorter.
+        Sort the provided query based on the current sorting implementation.
+
+        Args:
+            session:
+                The SQLAlchemy Session for access to database state.
+            query:
+                The base `Filterable` SELECT query to apply sorting to.
+            model:
+                The `Filterable` type being used for selection.
+            sorting:
+                The sorting string being parsed and applied to this sort. The
+                shape of this parameter is specific to the Sorter in use.
+
+        Returns:
+            SelectOfScalar[Filterable] | None:
+                Returns a sorted SELECT clause based on the provided query, or
+                None if this Sorter cannot sort using the provided sorting value.
         """
 
 
 class SimpleSorter(Sorter):
     """
-    Basic sorting class to support `field:direction` syntax.
+    Basic `Sorter` implementation to support `field:direction` syntax.
+
+
     """
+
+    @classmethod
+    def priority(cls) -> int:
+        """
+        See Sorter.priority() for documentation.
+        """
+        return 999
 
     @classmethod
     def sort(
         cls, session: Session, query: SelectOfScalar[Filterable], model: type[Filterable], sorting: str
     ) -> SelectOfScalar[Filterable] | None:
         """
-        Apply this sorter to the current query.
+        See Sorter.sort() for documentation.
         """
         try:
             # allow syntax (field)(:(asc|desc))?
@@ -65,16 +95,21 @@ class SimpleSorter(Sorter):
         return query.order_by(sort)
 
     @classmethod
-    def priority(cls) -> int:
-        """
-        Retrieve the priority order for this sorter.
-        """
-        return 999
-
-    @classmethod
     def split(cls, model: type[Filterable], value: str) -> tuple[Any, Direction]:
         """
-        Retrieve a sorted field reference from a data model by name.
+        Retrieve a sorted field reference from a data model, by name.
+
+        Args:
+            model:
+                The `Filterable` type being used to access the sorting field.
+            value:
+                The value being parsed and split into a directed sorting, by
+                splitting on `":"` and returning a parsed direction segment.
+
+        Returns:
+            tuple[Any, Direction]:
+                A tuple containing the column from the model being used for the
+                sorting, and a `Direction` to signal which direction to sort in.
         """
         chunks = iter(value.split(":", 1))
         location = next(chunks)

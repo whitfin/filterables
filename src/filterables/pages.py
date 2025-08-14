@@ -65,6 +65,18 @@ class Paginator(Filterable):
 
         This constructor supports both manual construction as well as integrating
         with FastAPI as a dependency in order to parse query parameters from routes.
+
+        Args:
+            limit:
+                The maximum amount of objects to return in each page.
+            offset:
+                The leading number of objects to skip before reading back values.
+            sorting:
+                A list of sorting values to apply across multiple fields. The
+                format of this value depends on the `Sorter` implementations
+                available inside this runtime.
+            excludes:
+                A list of fields to exclude from the paginated response.
         """
         super().__init__(
             limit=_query_parameter(limit),
@@ -78,7 +90,22 @@ class Paginator(Filterable):
         self, session: Session, query: SelectOfScalar[Filterable], filters: Filters | None = None
     ) -> Pagination[Filterable]:
         """
-        Run a Paginator using a query to generate a Pagination.
+        Execute a `Paginator` using a query o generate a `Pagination`.
+
+        Args:
+            session:
+                A SQLAlchemy `Session` used to communicate with the backing
+                database for results.
+            query:
+                The `Filterable` SELECT query to be paginated by this instance.
+            filters:
+                An optional set of `Filters` to apply to the query before
+                running pagination. This can be `None` to execute as is.
+
+        Returns:
+            Pagination[Filterable]:
+                Returns a `Pagination` of results containing results of the
+                same type defined in the query SELECT clauses.
         """
         query = filters.bind(session, query) if filters else query
         model = Filterable.from_query(query)
