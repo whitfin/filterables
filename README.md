@@ -314,7 +314,6 @@ Please note that SQLModel is still fairly new, and does not have a commitment to
 specific API yet. As such this project will remain in the 0.x version line and has
 limited typing support due to the wide use of `Any` in SQLModel.
 
-The current version of this project supports SQLite, MySQL and MariaDB drivers
-for SQLModel. Support for PostgreSQL is tentative and may work as-is, depending
-on which features you use. The easiest way is to try it out and file issues as
-needed!
+The current version of this project supports SQLite, MySQL/MariaDB and PostgreSQL
+drivers for SQLModel. Each is tested fully in the CI/CD pipeline in the GitHub
+repository. The easiest way is to try it out and file issues as needed!

@@ -563,7 +563,7 @@ def get_value_types(
             jsonb = "json" if isinstance(column, JSON) else "jsonb"
             typed = getattr(func, f"{jsonb}_typeof")(value)
 
-        else:
+        elif dialect in ["mysql", "mariadb"]:
             # handle MySQL typing
             typed = func.JSON_TYPE(value)
 
