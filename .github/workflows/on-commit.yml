@@ -79,6 +79,7 @@ jobs:
   test-mssql:
     name: Testing (MSSQL)
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy: *strategy
     steps:
       - uses: actions/checkout@v4
