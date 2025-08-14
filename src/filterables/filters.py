@@ -113,13 +113,13 @@ class FilterHas(Filter):
 
         if children:
             if dialect == "sqlite":
-                match = func.json_type(column, path) == "null"
+                match = func.json_type(column, path) != "null"
 
             elif dialect == "postgresql":
-                match = func.jsonb_typeof(value) == "null"
+                match = func.jsonb_typeof(value) != "null"
 
             elif dialect in ["mariadb", "mysql"]:
-                match = func.json_type(value) == "NULL"
+                match = func.json_type(value) != "NULL"
 
             else:
                 match = value != "null"
