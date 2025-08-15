@@ -20,6 +20,9 @@ class Direction(str, Enum):
 class Sorter(ABC):
     """
     Abstract class for use when parsing sort parameters.
+
+    Subclassing `Sorter` will automatically bind your `Sorter` to the main
+    `Paginator` lifecycle, easily allowing for custom sorting to be handled.
     """
 
     @classmethod
@@ -63,8 +66,6 @@ class Sorter(ABC):
 class SimpleSorter(Sorter):
     """
     Basic `Sorter` implementation to support `field:direction` syntax.
-
-
     """
 
     @classmethod
