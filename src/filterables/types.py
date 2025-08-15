@@ -27,7 +27,7 @@ from sqlmodel import (
 )
 from sqlmodel import Field as SQLField
 
-from filterables import NestedFilterable
+from filterables import NestableType
 
 # comparable types for use with filtering
 Comparable: TypeAlias = bool | float | int | str
@@ -37,7 +37,7 @@ AnyBool = set([Boolean])
 AnyDate = set([Date, DateTime, Interval, Time, TIMESTAMP])
 AnyFloat = set([DECIMAL, Double, Float, Numeric, REAL])
 AnyInteger = set([BigInteger, Integer, SmallInteger])
-AnyJson = set([JSON, JSONB, NestedFilterable])
+AnyJson = set([JSON, JSONB, NestableType])
 AnyNumber = AnyInteger | AnyFloat
 AnyString = AnyDate | set([AutoString, CHAR, CLOB, String, Text, VARCHAR])
 AnyThing = AnyBool | AnyDate | AnyInteger | AnyFloat | AnyNumber | AnyString

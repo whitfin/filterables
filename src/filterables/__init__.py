@@ -153,13 +153,13 @@ def Nestable(cls: type[Filterable], *args, **kwargs) -> type[Filterable]:
     return SQLField(
         *args,
         default_factory=cls,
-        sa_column=Column(NestedFilterable(cls)),
+        sa_column=Column(NestableType(cls)),
         schema_extra=extra,
         **kwargs,
     )
 
 
-class NestedFilterable(TypeDecorator, Generic[FilterableT]):
+class NestableType(TypeDecorator, Generic[FilterableT]):
     """
     Custom decorator class to allow for nested Filterable models.
     """
@@ -207,5 +207,5 @@ __all__ = [
     "FilterableT",
     "Jsonable",
     "Nestable",
-    "NestedFilterable",
+    "NestableType",
 ]
