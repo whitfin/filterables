@@ -1,4 +1,3 @@
-import pytest
 from sqlmodel import Session, select
 
 from filterables.sorters import SimpleSorter
@@ -51,8 +50,6 @@ def test_simple_sorter_invalid_field(session: Session):
 
 def test_simple_sorter_invalid_direction(session: Session):
     """
-    Test simple sorting with an invalid direction causes an error.
+    Test simple sorting with an invalid direction skips sorting.
     """
-    with pytest.raises(ValueError, match="'id' is not a valid Direction"):
-        query = select(Person)
-        query = SimpleSorter.sort(session, query, Person, "id:id")
+    assert SimpleSorter.sort(session, select(Person), Person, "id:id") is None

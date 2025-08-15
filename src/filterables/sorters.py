@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any
 
 from sqlmodel import Session, text
 from sqlmodel.sql.expression import SelectOfScalar
 
-from filterables import Filterable, NestableType
+from filterables import Filterable
 
 
 class Direction(str, Enum):
@@ -82,40 +81,45 @@ class SimpleSorter(Sorter):
         """
         See Sorter.sort() for documentation.
         """
+
+        from filterables.filters import get_value_ref
+        from filterables.types import AnyJson
+
         try:
             # allow syntax (field)(:(asc|desc))?
-            field, direction = cls.split(model, sorting)
-        except AttributeError:  # pragma: no cover
+            column, children, direction = cls.split(sorting)
+            column = getattr(model, column)
+            sorted = get_value_ref(column, children, session.bind.dialect.name)
+        except (AttributeError, ValueError):  # pragma: no cover
             return None
 
         # filter out null for the sorting field to skip
-        if isinstance(field.type, NestableType):
-            query = query.where(field != text("'null'"))
+        if isinstance(sorted.type, tuple(AnyJson)):
+            query = query.where(sorted != text("'null'"))
         else:
-            query = query.where(field.isnot(None))
+            query = query.where(sorted.isnot(None))
 
         # convert the direction to the sorted column element for SQLAlchemy
-        return query.order_by(field.desc() if direction == Direction.DESCENDING else field.asc())
+        return query.order_by(sorted.desc() if direction == Direction.DESCENDING else sorted.asc())
 
     @classmethod
-    def split(cls, model: type[Filterable], value: str) -> tuple[Any, Direction]:
+    def split(cls, value: str) -> tuple[str, str, Direction]:
         """
         Retrieve a sorted field reference from a data model, by name.
 
         Args:
-            model:
-                The `Filterable` type being used to access the sorting field.
             value:
                 The value being parsed and split into a directed sorting, by
                 splitting on `":"` and returning a parsed direction segment.
 
         Returns:
-            tuple[Any, Direction]:
+            tuple[str, str, Direction]:
                 A tuple containing the column from the model being used for the
-                sorting, and a `Direction` to signal which direction to sort in.
+                sorting, and children of the column for nested type, and a
+                `Direction` to signal which direction to sort in.
         """
         chunks = iter(value.split(":", 1))
-        location = next(chunks)
+        children = next(chunks).split(".")
         direction = Direction(next(chunks, "asc").lower())
 
-        return getattr(model, location.split(".", 1)[0]), direction
+        return children[0], children[1:], direction
