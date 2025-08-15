@@ -111,7 +111,7 @@ class Paginator(Filterable):
 
         # fetch model metadata
         meta = inspect(model)
-        pkey = meta.primary_key[0].name
+        pkey = meta.primary_key[0].name  # type: ignore[union-attr]
 
         # append every sort field
         for sorting in self.sorting:
