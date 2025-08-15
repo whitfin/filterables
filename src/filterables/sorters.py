@@ -5,7 +5,7 @@ from typing import Any
 from sqlmodel import Session, text
 from sqlmodel.sql.expression import SelectOfScalar
 
-from filterables import Filterable, NestableFilterable
+from filterables import Filterable, NestedFilterable
 
 
 class Direction(str, Enum):
@@ -89,7 +89,7 @@ class SimpleSorter(Sorter):
             return None
 
         # filter out null for the sorting field to skip
-        if isinstance(field.type, NestableFilterable):
+        if isinstance(field.type, NestedFilterable):
             query = query.where(field != text("'null'"))
         else:
             query = query.where(field.isnot(None))
