@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "filterables"
-version = "0.8.0"
+version = "0.9.0"
 description = "Filtering and pagination for Pydantic and SQLModel, with FastAPI integration"
 readme = "README.md"
 requires-python = ">=3.9"

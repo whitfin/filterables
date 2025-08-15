@@ -12,14 +12,14 @@ parameters into filters inside your SQLModel queries.
 To get started with `filterables`, install it from this repository:
 
 ```bash
-pip install git+https://github.com/whitfin/filterables@0.8.0
+pip install git+https://github.com/whitfin/filterables@0.9.0
 ```
 
 If you're using a `pyproject.toml`, you can use this syntax as a dependency:
 
 ```toml
 dependencies = [
-    "filterables @ git+https://github.com/whitfin/filterables@0.8.0"
+    "filterables @ git+https://github.com/whitfin/filterables@0.9.0"
 ]
 ```
 
