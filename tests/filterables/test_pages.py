@@ -1,7 +1,7 @@
 # from sqlalchemy import select
 # from src.data import get_database_session
 # from src.models.core.fields import Freeform
-# from src.models.core.pages import Paginator, run_paginator
+# from src.models.core.pnames import Paginator, run_paginator
 # from src.models.schema.recipe import Recipe
 # from src.models.schema.report import Report
 # from src.models.schema.revision import Revision
@@ -45,12 +45,12 @@ def test_run_paginator_with_single_sort(session: Session, people_25: list[Person
     """
     query = select(Person)
 
-    paginator = Paginator(sorting=["age"])
+    paginator = Paginator(sorting=["name"])
     pagination = paginator.exec(session, query)
 
     assert pagination.count == len(people_25)
     assert pagination.params == paginator
-    assert pagination.results == sorted(people_25, key=lambda person: person.age)
+    assert pagination.results == sorted(people_25, key=lambda person: person.name)
 
 
 def test_run_paginator_with_single_sort_and_direction(session: Session, people_25: list[Person]):
@@ -59,12 +59,12 @@ def test_run_paginator_with_single_sort_and_direction(session: Session, people_2
     """
     query = select(Person)
 
-    paginator = Paginator(sorting=["age:desc"])
+    paginator = Paginator(sorting=["name:desc"])
     pagination = paginator.exec(session, query)
 
     assert pagination.count == len(people_25)
     assert pagination.params == paginator
-    assert pagination.results == sorted(people_25, key=lambda person: person.age, reverse=True)
+    assert pagination.results == sorted(people_25, key=lambda person: person.name, reverse=True)
 
 
 def test_run_paginator_with_multi_sort_and_direction(session: Session, people_25: list[Person]):
