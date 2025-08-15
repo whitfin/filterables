@@ -99,6 +99,10 @@ class Filterable(BaseModel):
             if isclass(ct) and issubclass(ct, Filterable):
                 return ct
 
+            ce = column["entity"]
+            if isclass(ce) and issubclass(ce, Filterable):
+                return ce
+
         raise ValueError("Unable to determine Filterable query model")
 
     @model_validator(mode="after")

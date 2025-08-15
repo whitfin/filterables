@@ -459,7 +459,7 @@ def _count(session: Session, filters: dict[str, Any]) -> int:
     value = Filters.model_validate(filters)
 
     query = select(func.count(Person.id))
-    query = value.bind(session, query, Person)
+    query = value.bind(session, query)
 
     (count,) = session.exec(query).first()
 
