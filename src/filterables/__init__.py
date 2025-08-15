@@ -1,11 +1,11 @@
 from inspect import isclass
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, model_validator
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlmodel import JSON, Column, TypeDecorator, text
+from sqlmodel import JSON, Column, TypeDecorator
 from sqlmodel import Field as SQLField
-from sqlmodel.sql.expression import ColumnElement, SelectOfScalar
+from sqlmodel.sql.expression import SelectOfScalar
 
 T = TypeVar("T")
 
@@ -20,44 +20,12 @@ class Filterable(BaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @classmethod
-    def has(cls, path: str | Any) -> ColumnElement:
+    def remove(self: T, paths: list[str]) -> T:
         """
-        Create a filter for null values in a query, including JSON types.
+        Remove a list of fields from a `Filterable`.
 
-        Args:
-            path:
-                The path within this model tree to check for existence.
-
-        Returns:
-            ColumnElement:
-                Returns a WHERE clause which can be used within a SELECT query.
-        """
-        field = cls.path(path) if isinstance(path, str) else path
-
-        return field != text("'null'") if isinstance(field.type, NestedFilterable) else field.isnot(None)
-
-    @classmethod
-    def path(cls, path: str) -> Any:
-        """
-        Retrieve a field reference from a data model, by dot-separated path.
-
-        Args:
-            path:
-                The path within this model tree to search for.
-
-        Returns:
-            Any:
-                Returns the value located at the end of a path. Either a root
-                SQLModel field or a nested JSON reference.
-        """
-        paths = path.split(".", 1)
-        field = getattr(cls, paths[0])
-        return field[paths[1]] if len(paths) > 1 else field
-
-    def drop(self: T, paths: list[str]) -> T:
-        """
-        Drop a list of excluded fields from a `Filterable`.
+        Strongly typed root fields will be set to `None`, whereas nested fields
+        inside either a dictionary or `Nestable` will be dropped completely.
 
         Args:
             paths:
@@ -99,8 +67,12 @@ class Filterable(BaseModel):
                     del base[path[-1]]
 
                 # or remove prop from a Jsonable
-                if isinstance(base, Jsonable):
+                elif isinstance(base, Jsonable):
                     delattr(base, path[-1])
+
+                # or set to None
+                else:
+                    setattr(base, path[-1], None)
 
         return self
 
@@ -130,7 +102,7 @@ class Filterable(BaseModel):
         raise ValueError("Unable to determine Filterable query model")
 
     @model_validator(mode="after")
-    def unpack(self) -> "Filterable":
+    def handle_validation(self) -> "Filterable":
         """
         Pydantic callback to transform nested types to their Pydantic models.
         """
@@ -177,13 +149,13 @@ def Nestable(cls: type[Filterable], *args, **kwargs) -> type[Filterable]:
     return SQLField(
         *args,
         default_factory=cls,
-        sa_column=Column(NestedFilterable(cls)),
+        sa_column=Column(NestableFilterable(cls)),
         schema_extra=extra,
         **kwargs,
     )
 
 
-class NestedFilterable(TypeDecorator, Generic[FilterableT]):
+class NestableFilterable(TypeDecorator, Generic[FilterableT]):
     """
     Custom decorator class to allow for nested Filterable models.
     """
@@ -231,5 +203,5 @@ __all__ = [
     "FilterableT",
     "Jsonable",
     "Nestable",
-    "NestedFilterable",
+    "NestableFilterable",
 ]

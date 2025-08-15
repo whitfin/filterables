@@ -262,13 +262,13 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
 
         for key, filter in self.root.items():
             try:
-                children = key.split(".")
-                column = model.path(children[0])
+                chunks = key.split(".")
+                column = getattr(model, chunks[0])
             except AttributeError:  # pragma: no cover
                 continue
 
             # generated the filtered clauses for our field + dialect
-            bound = filter.create(column, children[1:], dialect)
+            bound = filter.create(column, chunks[1:], dialect)
             query = query.where(bound)
 
         # write filters to self for later refs

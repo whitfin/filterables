@@ -3,6 +3,7 @@ from typing import Any, Generic, Iterator, Type, TypeVar
 from fastapi import Query
 from fastapi.params import Query as QueryParam
 from pydantic import Field, field_serializer
+from sqlalchemy import inspect
 from sqlmodel import Session, func
 from sqlmodel.sql.expression import SelectOfScalar, Sequence
 
@@ -53,7 +54,7 @@ class Paginator(Filterable):
         self,
         limit: int = Query(25, ge=0),
         offset: int = Query(0, ge=0),
-        sorting: list[str] = Query(["id"], alias="sort"),
+        sorting: list[str] = Query(["_pk"], alias="sort"),
         excludes: list[str] = Query([], alias="exclude"),
         **kwargs,
     ):
@@ -108,8 +109,17 @@ class Paginator(Filterable):
         model = Filterable.from_query(query)
         sorts = sorted(Sorter.__subclasses__(), key=lambda sorter: sorter.priority())
 
+        # fetch model metadata
+        meta = inspect(model)
+        pkey = meta.primary_key[0].name
+
         # append every sort field
         for sorting in self.sorting:
+            # handle primary sort
+            if sorting == "_pk":
+                sorting = pkey
+
+            # find our sorting
             for sorter in sorts:
                 if (value := sorter.sort(session, query, model, sorting)) is not None:
                     query = value
@@ -119,8 +129,8 @@ class Paginator(Filterable):
         model_exec = query.limit(self.limit).offset(self.offset)
         model_rows = session.exec(model_exec).all() if self.limit > 0 else []
 
-        # create a count query based on the resource query
-        meta_trim = model_exec.with_only_columns(func.count(model.path("id")))
+        # create a count of the priamry key based on the resource query
+        meta_trim = model_exec.with_only_columns(func.count(getattr(model, pkey)))
         meta_exec = meta_trim.offset(0).limit(1).order_by(None)
         meta_rows = session.exec(meta_exec).first()  # type: ignore[call-overload]
 
@@ -129,7 +139,7 @@ class Paginator(Filterable):
             count=next(_map_rows([meta_rows], int)),
             params=self,
             filters=getattr(query, "_filterables", Filters({})),  # type: ignore[arg-type]
-            results=[model.drop(self.excludes) for model in _map_rows(model_rows, model)],
+            results=[model.remove(self.excludes) for model in _map_rows(model_rows, model)],
         )
 
 

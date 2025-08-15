@@ -296,7 +296,7 @@ class MySorter(Sorter):
         direct = capt[2]
 
         # access the model field
-        field = model.path(path)
+        field = getattr(model, path)
 
         # modify the query to filter on the column in the direction specified
         return query.order_by(field.desc() if direct == "desc" else field.asc())

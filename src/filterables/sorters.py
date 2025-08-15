@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any
 
-from sqlmodel import Session
-from sqlmodel.sql.expression import SelectOfScalar
+from sqlmodel import Session, text
+from sqlmodel.sql.expression import SelectOfScalar, and_
 
 from filterables import Filterable
 
@@ -88,12 +88,11 @@ class SimpleSorter(Sorter):
         except AttributeError:  # pragma: no cover
             return None
 
-        # filter out null for the sort field
-        query = query.where(model.has(field))
-        sort = field.desc() if direction == Direction.DESCENDING else field.asc()
+        # filter out null for the sorting field to skip out null first
+        query = query.where(and_(field != text("'null'"), field.isnot(None)))
 
-        # sort sort direction
-        return query.order_by(sort)
+        # convert the direction to the sorted column element for SQLAlchemy
+        return query.order_by(field.desc() if direction == Direction.DESCENDING else field.asc())
 
     @classmethod
     def split(cls, model: type[Filterable], value: str) -> tuple[Any, Direction]:
@@ -116,4 +115,4 @@ class SimpleSorter(Sorter):
         location = next(chunks)
         direction = Direction(next(chunks, "asc").lower())
 
-        return model.path(location), direction
+        return getattr(model, location.split(".", 1)[0]), direction
