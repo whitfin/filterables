@@ -186,7 +186,7 @@ filters = Filters({
 ```
 
 You can access any level of nesting inside your JSON column, so you can chain
-multiple segments (e.g. `data.data.data.age`) to your hearts content!
+multiple segments (e.g. `data.data.data.age`) to your heart's content!
 
 Filterables also includes a freeform JSON structure `Jsonable`, an empty Pydantic
 model with extra properties allowed. If you wish to store arbitray JSON, you can
@@ -203,7 +203,7 @@ project contain documentation for OpenAPI.
     * `?filters=%7B%22age%22%3A%7B%22%24gt%22%3A18%2C%22%24lt%22%3A35%7D%7D`
 
 If we look at the earlier examples, let's add them within a FastAPI route to
-create a JSON based pagination via query parameters:
+create a JSON-based pagination via query parameters:
 
 ```python
 from filterables.deps import filters, paginate
@@ -317,7 +317,7 @@ The current version of this project supports SQLite, MySQL/MariaDB and PostgreSQ
 drivers for SQLModel. Each is tested fully in the CI/CD pipeline in the GitHub
 repository.
 
-MSSQL is support for top level fields, but nested JSON comparisons **will** cause
+MSSQL is support for top-level fields, but nested JSON comparisons **will** cause
 errors for mismatched types. Unless you can guarantee the types match, you should
 avoid using nested fields with MSSQL. This dialect is still in CI/CD, but marked
 as fallible due to these types of failures.
