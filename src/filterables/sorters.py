@@ -89,7 +89,7 @@ class SimpleSorter(Sorter):
             # allow syntax (field)(:(asc|desc))?
             column, children, direction = cls.split(sorting)
             column = getattr(model, column)
-            sorted = get_value_ref(column, children, session.bind.dialect.name)
+            sorted = get_value_ref(column, children, session.bind.dialect.name)  # type: ignore[union-attr]
         except (AttributeError, ValueError):  # pragma: no cover
             return None
 
@@ -103,7 +103,7 @@ class SimpleSorter(Sorter):
         return query.order_by(sorted.desc() if direction == Direction.DESCENDING else sorted.asc())
 
     @classmethod
-    def split(cls, value: str) -> tuple[str, str, Direction]:
+    def split(cls, value: str) -> tuple[str, list[str], Direction]:
         """
         Retrieve a sorted field reference from a data model, by name.
 
