@@ -3,9 +3,9 @@ from enum import Enum
 from typing import Any
 
 from sqlmodel import Session, text
-from sqlmodel.sql.expression import SelectOfScalar, and_
+from sqlmodel.sql.expression import SelectOfScalar
 
-from filterables import Filterable
+from filterables import Filterable, NestableFilterable
 
 
 class Direction(str, Enum):
@@ -88,8 +88,11 @@ class SimpleSorter(Sorter):
         except AttributeError:  # pragma: no cover
             return None
 
-        # filter out null for the sorting field to skip out null first
-        query = query.where(and_(field != text("'null'"), field.isnot(None)))
+        # filter out null for the sorting field to skip
+        if isinstance(field.type, NestableFilterable):
+            query = query.where(field != text("'null'"))
+        else:
+            query = query.where(field.isnot(None))
 
         # convert the direction to the sorted column element for SQLAlchemy
         return query.order_by(field.desc() if direction == Direction.DESCENDING else field.asc())
