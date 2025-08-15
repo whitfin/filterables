@@ -5,6 +5,8 @@ from sqlmodel import Session, text
 from sqlmodel.sql.expression import SelectOfScalar
 
 from filterables import Filterable
+from filterables.filters import get_value_field
+from filterables.types import AnyJson
 
 
 class Direction(str, Enum):
@@ -81,15 +83,11 @@ class SimpleSorter(Sorter):
         """
         See Sorter.sort() for documentation.
         """
-
-        from filterables.filters import get_value_ref
-        from filterables.types import AnyJson
-
         try:
             # allow syntax (field)(:(asc|desc))?
             column, children, direction = cls.split(sorting)
             column = getattr(model, column)
-            sorted = get_value_ref(column, children, session.bind.dialect.name)  # type: ignore[union-attr]
+            sorted = get_value_field(column, children, session.bind.dialect.name)  # type: ignore[union-attr]
         except (AttributeError, ValueError):  # pragma: no cover
             return None
 

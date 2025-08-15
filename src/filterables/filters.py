@@ -108,7 +108,7 @@ class FilterHas(Filter):
         See Filter.create() for documentation.
         """
         path = get_child_ref(column, children, dialect)
-        value = get_value_ref(column, children, dialect)
+        value = get_value_field(column, children, dialect)
         check: _Elem = ~value.is_(None)
 
         if children:
@@ -464,7 +464,7 @@ def get_child_ref(column: ColumnElement, children: list[str], dialect: str) -> l
     return children if dialect == "postgresql" else '$."' + '"."'.join(children) + '"'
 
 
-def get_value_ref(column: ColumnElement, children: list[str], dialect: str) -> ColumnElement:
+def get_value_field(column: ColumnElement, children: list[str], dialect: str) -> ColumnElement:
     """
     Retrieve a reference to a dialect specific SQL value.
 
@@ -517,7 +517,7 @@ def get_value_types(
 
     Returned typing can be used alongside `create_guard` to provide type-safe
     access to nested fields for strongly typed backends. The returned value
-    can differ to that returned by `get_value_ref` due to context within the
+    can differ to that returned by `get_value_field` due to context within the
     provided `comparable` value.
 
     Args:
@@ -542,13 +542,13 @@ def get_value_types(
         tuple[ColumnElement, ColumnElement | None]:
             A tuple containing:
                 - A value reference (with optional nesting), which may or may
-                  not differ to that returned by `get_value_ref` due to having
+                  not differ to that returned by `get_value_field` due to having
                   additional context of a `comparable` value.
                 - A typing clause which provides type safe access for strongly
                   typed backends. For use with `create_guard`.
     """
     # generate the caster for potentially nested values (can no op)
-    value = get_value_ref(column, children, dialect)
+    value = get_value_field(column, children, dialect)
     typing = None
 
     # nesting
