@@ -6,8 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "filterables"
 version = "0.9.0"
 description = "Filtering and pagination for Pydantic and SQLModel, with FastAPI integration"
-readme = "README.md"
 requires-python = ">=3.9"
+readme = "README.md"
+license-files = [
+    "LICENSE"
+]
 dependencies = [
     "alembic~=1.14",
     "fastapi~=0.116",
@@ -27,9 +30,6 @@ dev = [
     "pytest-env~=1.1",
     "ruff~=0.12"
 ]
-
-[project.license]
-file = "LICENSE"
 
 [[project.authors]]
 name = "Isaac Whitfield"
