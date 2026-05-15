@@ -1,5 +1,5 @@
 # Filterables
-[![Build Status](https://img.shields.io/github/actions/workflow/status/whitfin/filterables/on-commit.yml?branch=main)](https://github.com/whitfin/filterables/actions) [![PyPI Version](https://img.shields.io/pypi/pyversions/filterables.svg)](https://pypi.org/project/filterables/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/whitfin/filterables/on-commit.yml?branch=main)](https://github.com/whitfin/filterables/actions) [![PyPI Version](https://img.shields.io/github/v/tag/whitfin/filterables?label=pypi)](https://pypi.org/project/filterables/)
 
 Filtering and pagination for Pydantic and SQLModel, with FastAPI integration.
 
