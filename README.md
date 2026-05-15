@@ -1,4 +1,5 @@
 # Filterables
+[![Build Status](https://img.shields.io/github/actions/workflow/status/whitfin/filterables/on-commit.yml?branch=main)](https://github.com/whitfin/filterables/actions) [![PyPI Version](https://img.shields.io/pypi/pyversions/filterables.svg)](https://pypi.org/project/filterables/)
 
 Filtering and pagination for Pydantic and SQLModel, with FastAPI integration.
 
@@ -12,14 +13,14 @@ parameters into filters inside your SQLModel queries.
 To get started with `filterables`, install it from this repository:
 
 ```bash
-pip install git+https://github.com/whitfin/filterables@0.9.0
+pip install filterables
 ```
 
 If you're using a `pyproject.toml`, you can use this syntax as a dependency:
 
 ```toml
 dependencies = [
-    "filterables @ git+https://github.com/whitfin/filterables@0.9.0"
+    "filterables~=0.9"
 ]
 ```
 

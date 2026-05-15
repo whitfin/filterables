@@ -36,7 +36,9 @@ name = "Isaac Whitfield"
 email = "iw@whitfin.io"
 
 [project.urls]
-homepage = "https://whitfin.io"
+Homepage = "https://github.com/whitfin/filterables"
+Repository = "https://github.com/whitfin/filterables"
+Issues = "https://github.com/whitfin/filterables/issues"
 
 [tool.ruff]
 line-length = 120
