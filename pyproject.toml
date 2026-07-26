@@ -43,6 +43,12 @@ Issues = "https://github.com/whitfin/filterables/issues"
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.params.Depends"
+]
+
 [tool.pytest.ini_options]
 minversion = "6.0"
 pythonpath = ["."]
