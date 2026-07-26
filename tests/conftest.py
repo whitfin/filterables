@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Generator
 from functools import lru_cache
 from pathlib import Path
 
@@ -57,7 +58,7 @@ def engine() -> Engine:
 
 
 @pytest.fixture
-def session() -> Session:
+def session() -> Generator[Session, None, None]:
     """
     Fixture to yield a clean database session.
     """
@@ -75,7 +76,7 @@ def clean(session: Session):
 
 
 @pytest.fixture
-def people_1(session: Session) -> list[Person]:
+def people_1(session: Session) -> Generator[list[Person], None, None]:
     """
     Fixture to bootstrap a session with a `Person` record.
     """
@@ -83,7 +84,7 @@ def people_1(session: Session) -> list[Person]:
 
 
 @pytest.fixture
-def people_25(session: Session) -> list[Person]:
+def people_25(session: Session) -> Generator[list[Person], None, None]:
     """
     Fixture to bootstrap a session with 25 `Person` records.
     """
@@ -91,7 +92,7 @@ def people_25(session: Session) -> list[Person]:
 
 
 @pytest.fixture
-def people_100(session: Session) -> list[Person]:
+def people_100(session: Session) -> Generator[list[Person], None, None]:
     """
     Fixture to bootstrap a session with 100 `Person` records.
     """
@@ -99,14 +100,14 @@ def people_100(session: Session) -> list[Person]:
 
 
 @pytest.fixture
-def person_1(people_1: list[Person]) -> Person:
+def person_1(people_1: list[Person]) -> Generator[Person, None, None]:
     """
     Fixture to bootstrap a session with a `Person` record.
     """
     yield people_1[0]
 
 
-def populated(session: Session, model: type[Filterable], source: str):
+def populated(session: Session, model: type[Filterable], source: str) -> list[Person]:
     """
     Populate a dataset from a JSONL source location.
     """
