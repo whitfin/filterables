@@ -115,6 +115,7 @@ class Paginator(Filterable):
         # fetch model metadata
         meta = inspect(model)
         pkey = meta.primary_key[0].name  # type: ignore[union-attr]
+        mkey = getattr(model, pkey)
 
         # append every sort field
         for sorting in self.sorting:
@@ -128,13 +129,17 @@ class Paginator(Filterable):
                     query = value
                     break
 
+        # apply default ORDER BY for MSSQL when using LIMIT/OFFSET
+        if session.bind.dialect.name == "mssql" and not query._order_by_clauses:
+            query = query.order_by(mkey)
+
         # apply the page limit, the page offset, and the column ordering
         model_exec = query.limit(self.limit).offset(self.offset)
         model_rows = session.exec(model_exec).all() if self.limit > 0 else []
 
         # create a count of the priamry key based on the resource query
-        meta_trim = model_exec.with_only_columns(func.count(getattr(model, pkey)))
-        meta_exec = meta_trim.offset(0).limit(1).order_by(None)
+        meta_trim = model_exec.with_only_columns(func.count(mkey))
+        meta_exec = meta_trim.limit(None).offset(None).order_by(None)
         meta_rows = session.exec(meta_exec).first()  # type: ignore[call-overload]
 
         # execute and summarize
