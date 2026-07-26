@@ -24,8 +24,7 @@ dependencies = [
 ]
 ```
 
-At some point this library might make it to PyPI, but until then you can
-feel free to fork this repository for peace of mind as needed!
+Or if you need a development version, feel free to point to this repository.
 
 ## Getting Started
 
@@ -78,7 +77,7 @@ filters = Filters({
         "$gt": 18,
         "$lt": 35
     }
-}}
+})
 
 # select all people
 query = select(Person)
@@ -135,10 +134,10 @@ pages = Paginator(
 )
 
 # execute the query, but using a paginator
-value = paginator.exec(session, query)
+value = pages.exec(session, query)
 
 # OR: you can also combine with filters directly
-value = paginator.exec(session, query, filters)
+value = pages.exec(session, query, filters)
 ```
 
 Rather than retrieving a full list of people, we'll now get a `Pagination` which
@@ -294,7 +293,7 @@ class MySorter(Sorter):
         # get the parameter values
         cap = scoring.allcaptures()
         path = cap[1]
-        direct = capt[2]
+        direct = cap[2]
 
         # access the model field
         field = getattr(model, path)
