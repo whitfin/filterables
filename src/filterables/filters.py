@@ -273,7 +273,7 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
             query = query.where(bound)
 
         # write filters to self for later refs
-        query._filterables = self
+        query._filterables = self  # type: ignore[attr-defined]
 
         return query
 
