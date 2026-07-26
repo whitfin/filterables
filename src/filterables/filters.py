@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 from abc import ABC
-from typing import Callable, Union
+from typing import Annotated, Callable, Union
 
 from pydantic import Field, RootModel
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import JSON, Boolean, Float, Integer, Session, Text, case, func, literal, text
 from sqlmodel.sql.expression import BinaryExpression, ColumnElement, SelectOfScalar, and_
-from typing_extensions import Annotated
 
 from filterables import Filterable
 from filterables.types import AnyJson, Comparable, get_column_type_for_value, get_json_type_for_value
@@ -272,7 +273,7 @@ class Filters(RootModel[dict[str, Annotated[Union[tuple(Filter.__subclasses__())
             query = query.where(bound)
 
         # write filters to self for later refs
-        setattr(query, "_filterables", self)
+        query._filterables = self
 
         return query
 

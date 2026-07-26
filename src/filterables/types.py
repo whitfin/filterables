@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, TypeAlias, TypeVar
 
 from pydantic import Field as PydanticField
@@ -33,13 +35,13 @@ from filterables import NestableType
 Comparable: TypeAlias = bool | float | int | str
 
 # define common groups
-AnyBool = set([Boolean])
-AnyDate = set([Date, DateTime, Interval, Time, TIMESTAMP])
-AnyFloat = set([DECIMAL, Double, Float, Numeric, REAL])
-AnyInteger = set([BigInteger, Integer, SmallInteger])
-AnyJson = set([JSON, JSONB, NestableType])
+AnyBool = {Boolean}
+AnyDate = {Date, DateTime, Interval, Time, TIMESTAMP}
+AnyFloat = {DECIMAL, Double, Float, Numeric, REAL}
+AnyInteger = {BigInteger, Integer, SmallInteger}
+AnyJson = {JSON, JSONB, NestableType}
 AnyNumber = AnyInteger | AnyFloat
-AnyString = AnyDate | set([AutoString, CHAR, CLOB, String, Text, VARCHAR])
+AnyString = AnyDate | {AutoString, CHAR, CLOB, String, Text, VARCHAR}
 AnyThing = AnyBool | AnyDate | AnyInteger | AnyFloat | AnyNumber | AnyString
 
 
@@ -73,7 +75,7 @@ def get_column_type_for_value(value: Comparable) -> set[Any]:
     if isinstance(value, str):
         return AnyString
 
-    raise Exception("Unrecognised value type")
+    raise ValueError("Unrecognised value type")
 
 
 _json_types: dict[str, dict[type, str | list[str]]] = {

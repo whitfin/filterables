@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import JSON, Column, TypeDecorator
 from sqlmodel import Field as SQLField
 from sqlmodel.sql.expression import SelectOfScalar
+from typing_extensions import Self
 
 T = TypeVar("T")
 
@@ -20,7 +21,7 @@ class Filterable(BaseModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def remove(self: T, paths: list[str]) -> T:
+    def remove(self, paths: list[str]) -> Self:
         """
         Remove a list of fields from a `Filterable`.
 

@@ -1,4 +1,7 @@
-from typing import Any, Generic, Iterator, Type, TypeVar
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Any, Generic, TypeVar
 
 from fastapi import Query
 from fastapi.params import Query as QueryParam
@@ -21,7 +24,7 @@ class Pagination(Filterable, Generic[FilterableT]):
     """
 
     count: int
-    params: "Paginator"
+    params: Paginator
     filters: Filters = Field(examples=[Jsonable()])
     results: list[Filterable]
 
@@ -143,7 +146,7 @@ class Paginator(Filterable):
         )
 
 
-def _map_rows(rows: Sequence[Any], type: Type[T]) -> Iterator[T]:
+def _map_rows(rows: Sequence[Any], type: type[T]) -> Iterator[T]:
     """
     Map a row back into the required type, either as itself or found in a column.
     """
