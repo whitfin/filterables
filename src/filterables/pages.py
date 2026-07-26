@@ -130,7 +130,7 @@ class Paginator(Filterable):
                     break
 
         # apply default ORDER BY for MSSQL when using LIMIT/OFFSET
-        if session.bind.dialect.name == "mssql" and not query._order_by_clauses:
+        if session.bind.dialect.name == "mssql" and not query._order_by_clauses:  # type: ignore[union-attr]
             query = query.order_by(mkey)
 
         # apply the page limit, the page offset, and the column ordering
