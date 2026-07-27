@@ -313,14 +313,9 @@ Please note that SQLModel is still fairly new, and does not have a commitment to
 specific API yet. As such this project will remain in the 0.x version line and has
 limited typing support due to the wide use of `Any` in SQLModel.
 
-The current version of this project supports SQLite, MySQL/MariaDB and PostgreSQL
-drivers for SQLModel. Each is tested fully in the CI/CD pipeline in the GitHub
-repository.
-
-MSSQL is support for top-level fields, but nested JSON comparisons **will** cause
-errors for mismatched types. Unless you can guarantee the types match, you should
-avoid using nested fields with MSSQL. This dialect is still in CI/CD, but marked
-as fallible due to these types of failures.
+The `filterables` package is tested against the SQLite, MySQL, MariaDB, PostgreSQL
+and MSSQL drivers for SQLModel. Each is tested fully in the CI/CD pipeline in the
+GitHub repository.
 
 The easiest way to know if `filterables` will work for you is to try it out; please
 feel free to file issues as needed!

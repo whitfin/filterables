@@ -77,7 +77,7 @@ jobs:
           FILTERABLES_DATABASE_URI: mysql+pymysql://root:root@localhost:3306/mysql
 
   test-mssql:
-    name: Testing (MSSQL) (WIP)
+    name: Testing (MSSQL)
     runs-on: ubuntu-latest
     continue-on-error: true
     strategy: *strategy
@@ -93,10 +93,10 @@ jobs:
       - uses: potatoqualitee/mssqlsuite@v1.11
         with:
           install: sqlengine
-          sa-password: latentai.I0
-      - run: uv run pytest -s -vvv || true
+          sa-password: sa
+      - run: uv run pytest -s -vvv
         env:
-          FILTERABLES_DATABASE_URI: mssql+pymssql://sa:latentai.I0@localhost:1433/tempdb
+          FILTERABLES_DATABASE_URI: mssql+pymssql://sa:sa@localhost:1433/tempdb
 
   test-mysql:
     name: Testing (MySQL)
