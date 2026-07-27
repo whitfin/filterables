@@ -4,6 +4,7 @@ from abc import ABC
 from typing import Annotated, Callable, Union
 
 from pydantic import Field, RootModel
+from sqlalchemy import try_cast
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import JSON, Boolean, Float, Integer, Session, Text, case, func, literal, text
 from sqlmodel.sql.expression import BinaryExpression, ColumnElement, SelectOfScalar, and_
@@ -384,29 +385,40 @@ def create_caster(column: ColumnElement, children: list[str], dialect: str, comp
             appropriate type for the target value. This fucntion handles any
             dialect-specific type conversion and null value handling.
     """
-    # only postgres types...
-    if dialect != "postgresql":
+    # only mssql types, with JSON nests
+    if dialect == "mssql" and children:
+        # force bool to JSON text (not 0 or 1)
+        if isinstance(comparable, bool):
+            return lambda value: literal("true" if value else "false") if isinstance(value, bool) else value
+
+        # cast all numeric comparables to floats
+        if isinstance(comparable, (int, float)):
+            return lambda value: try_cast(value, Float)
+
+        # JSON_VALUE already unquotes strings, so no cast is required
         return lambda value: value
 
-    # cast comparables to a boolean
-    if isinstance(comparable, bool):
-        return lambda value: func.cast(value, Boolean)  # type: ignore
+    # only postgres types...
+    if dialect == "postgresql":
+        # cast comparables to a boolean
+        if isinstance(comparable, bool):
+            return lambda value: func.cast(value, Boolean)  # type: ignore
 
-    # cast comparables to a float
-    if isinstance(comparable, float):
-        return lambda value: func.cast(value, Float)  # type: ignore
+        # cast comparables to a float
+        if isinstance(comparable, float):
+            return lambda value: func.cast(value, Float)  # type: ignore
 
-    # cast comparables to an integer
-    if isinstance(comparable, int):
-        return lambda value: func.cast(value, Integer)  # type: ignore
+        # cast comparables to an integer
+        if isinstance(comparable, int):
+            return lambda value: func.cast(value, Integer)  # type: ignore
 
-    # cast comparables to text,trim JSON quotes
-    if isinstance(comparable, str):
-        return lambda value: func.trim(func.cast(value, Text), '"')  # type: ignore
+        # cast comparables to text,trim JSON quotes
+        if isinstance(comparable, str):
+            return lambda value: func.trim(func.cast(value, Text), '"')  # type: ignore
 
-    # cast nests to JSON types
-    if isinstance(column.type, tuple(AnyJson)):
-        return lambda value: func.cast(value, JSON if isinstance(column.type, JSON) else JSONB)  # type: ignore
+        # cast nests to JSON types
+        if isinstance(column.type, tuple(AnyJson)):
+            return lambda value: func.cast(value, JSON if isinstance(column.type, JSON) else JSONB)  # type: ignore
 
     # just in case, identity
     return lambda value: value
