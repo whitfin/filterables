@@ -4,7 +4,7 @@ from abc import ABC
 from typing import Annotated, Callable, Union
 
 from pydantic import Field, RootModel
-from sqlalchemy import try_cast
+from sqlalchemy import select, try_cast
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import JSON, Boolean, Float, Integer, Session, Text, case, func, literal, text
 from sqlmodel.sql.expression import BinaryExpression, ColumnElement, SelectOfScalar, and_
@@ -346,7 +346,7 @@ def create_chain(
     # generate the casting function and condition for the guard
     casting = create_caster(column, children, dialect, comparable)
     updated = condition(casting(value), casting)  # type: ignore
-    guarded = create_guard(typing, updated)
+    guarded = create_guard(typing, updated, dialect)
 
     # guard the call
     return guarded
@@ -424,7 +424,7 @@ def create_caster(column: ColumnElement, children: list[str], dialect: str, comp
     return lambda value: value
 
 
-def create_guard(typing: ColumnElement | None, condition: ColumnElement) -> ColumnElement:
+def create_guard(typing: ColumnElement | None, condition: ColumnElement, dialect: str) -> ColumnElement:
     """
     Create a guarded conditional expression for safe evaluation.
 
@@ -447,7 +447,13 @@ def create_guard(typing: ColumnElement | None, condition: ColumnElement) -> Colu
             A guarded filter clause, to be used within a SQL SELECT statement with
             ensured type safety based on the provided typing.
     """
-    return case((typing, condition), else_=text("FALSE")) if typing is not None else condition
+    if typing is None:
+        return condition
+
+    if dialect == "mssql":
+        return and_(typing, condition)
+
+    return case((typing, condition), else_=text("FALSE"))
 
 
 def get_child_ref(column: ColumnElement, children: list[str], dialect: str) -> list[str] | str:
@@ -474,7 +480,13 @@ def get_child_ref(column: ColumnElement, children: list[str], dialect: str) -> l
             list of children. The typing here should be considered as `Any`
             in case of new dialects being added/supported.
     """
-    return children if dialect == "postgresql" else '$."' + '"."'.join(children) + '"'
+    if dialect == "postgresql":
+        return children
+
+    if not children:
+        return "$"
+
+    return '$."' + '"."'.join(children) + '"'
 
 
 def get_value_field(column: ColumnElement, children: list[str], dialect: str) -> ColumnElement:
@@ -584,6 +596,26 @@ def get_value_types(
             # handle MySQL unquotes for JSON content
             if isinstance(comparable, str):
                 value = func.json_unquote(value)
+
+        # handle the MSSQL family
+        elif dialect == "mssql":
+            # render the types from an OPENJSON subquery
+            path = get_child_ref(column, children[:-1], dialect)
+            types = func.OPENJSON(column, path).table_valued("key", "value", "type")
+
+            # map OPENJSON types to their string representations
+            names = case(
+                (types.c.type == 1, "string"),
+                (types.c.type == 2, "number"),
+                (types.c.type == 3, "boolean"),
+                (types.c.type == 4, "array"),
+                (types.c.type == 5, "object"),
+                else_="null",
+            )
+
+            # determine the type of the requested final child, or default to _ in case
+            field = select(names).where(types.c.key == children[-1]).scalar_subquery()
+            typed = func.isnull(field, "_")
 
         else:
             # skip anything else
