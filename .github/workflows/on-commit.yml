@@ -93,10 +93,11 @@ jobs:
       - uses: potatoqualitee/mssqlsuite@v1.11
         with:
           install: sqlengine
-          sa-password: sa
+          show-log: true
+          sa-password: whitfin.IO
       - run: uv run pytest -s -vvv
         env:
-          FILTERABLES_DATABASE_URI: mssql+pymssql://sa:sa@localhost:1433/tempdb
+          FILTERABLES_DATABASE_URI: mssql+pymssql://sa:whitfin.IO@localhost:1433/tempdb
 
   test-mysql:
     name: Testing (MySQL)
