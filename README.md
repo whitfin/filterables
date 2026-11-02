@@ -20,7 +20,7 @@ If you're using a `pyproject.toml`, you can use this syntax as a dependency:
 
 ```toml
 dependencies = [
-    "filterables~=0.9"
+    "filterables~=0.10"
 ]
 ```
 
