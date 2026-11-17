@@ -54,6 +54,8 @@ class MyClass(Filterable, SQLModel):
 Rather than combining both into a single parent class, these two classes
 are kept separate in order to support multiple workflows (described later).
 
+_If you want to skip the README, you can check out an (example)[tests/example.py]._
+
 ## Filtering
 
 Filtering is handled via the `Filters` class, which provides various common
