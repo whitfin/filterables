@@ -20,6 +20,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "fastapi[standard]~=0.116",
     "httpx~=0.28",
     "mypy~=1.17",
     "psycopg2-binary~=2.9",
