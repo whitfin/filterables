@@ -208,6 +208,7 @@ create a JSON-based pagination via query parameters:
 ```python
 from filterables.deps import filters, paginate
 from filterables.filters import Filters
+from filterables.openapi import with_filter_docs
 from filterables.pages import Paginator
 
 # demonstration filterable class
@@ -220,6 +221,10 @@ class Person(Filterable, SQLModel):
 @app.get("/person")
 def find_resources(filters: Filters = Depends(filters), paginator: Paginator = Depends(paginate)) -> Pagination[Person]:
     return paginator.exec(session, select(Person), filters)
+
+
+# support Filter types in OpenAPI docs
+app.openapi = with_filter_docs(app.openapi)
 ```
 
 This will select a filtered page based on query parameters and return the

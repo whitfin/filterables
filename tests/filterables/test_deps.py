@@ -42,13 +42,25 @@ def test_filters_parsing(app: TestClient):
     assert response.json() == filters
 
 
-def test_filters_parsing_invalid(app: TestClient):
+@pytest.mark.parametrize("value", ["not-json", '{"field1":{}}'])
+def test_filters_parsing_invalid(app: TestClient, value):
     """
     Test invalid filters being parsed by the FastAPI handler.
     """
-    response = app.get("/filters", params={"filters": json.dumps({"field1": {}})})
+    response = app.get("/filters", params={"filters": value})
 
     assert response.status_code == 422
+    assert response.json() == {"detail": "Unable to validate filter syntax"}
+
+
+def test_filters_parsing_default(app: TestClient):
+    """
+    Test missing filters default to an empty set.
+    """
+    response = app.get("/filters")
+
+    assert response.status_code == 200
+    assert response.json() == {}
 
 
 def test_paginator_parsing(app: TestClient):
