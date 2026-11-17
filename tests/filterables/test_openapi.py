@@ -31,11 +31,14 @@ def test_filters_openapi():
     assert parameter["schema"]["type"] == "string"
     assert parameter["schema"]["default"] == "{}"
     assert parameter["schema"]["contentMediaType"] == "application/json"
-    assert parameter["examples"] == {
-        "combined_filters": {
-            "summary": "Combine equality, an exclusive range, and membership",
-            "value": '{"name":{"$eq":"Bob"},"age":{"$gt":18,"$lt":35},"id":{"$in":["2","3"]}}',
-        },
+    assert set(parameter["examples"]) == {"combined_filters"}
+
+    example = parameter["examples"]["combined_filters"]
+    assert example["summary"] == "Combine equality, an exclusive range, and membership"
+    assert json.loads(example["value"]) == {
+        "name": {"$eq": "Bob"},
+        "age": {"$gt": 18, "$lt": 35},
+        "id": {"$in": ["2", "3"]},
     }
 
     reference = parameter["schema"]["contentSchema"]["$ref"]

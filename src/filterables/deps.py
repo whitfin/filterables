@@ -26,7 +26,7 @@ _FiltersQuery = Annotated[
         openapi_examples={
             "combined_filters": {
                 "summary": "Combine equality, an exclusive range, and membership",
-                "value": '{"id":{"$in":["2","3"],"age":{"$gt":18,"$lt":35},"name":{"$eq":"Bob"}}}',
+                "value": '{"id":{"$in":["2","3"]},"age":{"$gt":18,"$lt":35},"name":{"$eq":"Bob"}}',
             },
         },
     ),
