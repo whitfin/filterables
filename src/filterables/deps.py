@@ -1,12 +1,39 @@
+from typing import Annotated
+
 from fastapi import Query
 from fastapi.exceptions import HTTPException
-from pydantic import ValidationError
+from pydantic import GetJsonSchemaHandler, GetPydanticSchema, Json, TypeAdapter, ValidationError
+from pydantic.json_schema import JsonSchemaValue
+from pydantic_core.core_schema import CoreSchema
 
 from filterables.filters import Filters
 from filterables.pages import Paginator
 
 
-def filters(filters: str = Query("{}")) -> Filters:
+def _filters_json_schema(_schema: CoreSchema, handler: GetJsonSchemaHandler) -> JsonSchemaValue:
+    """
+    Describe the query string as JSON-encoded Filters for schema generation.
+    """
+    return handler(TypeAdapter(Json[Filters]).core_schema)
+
+
+_FiltersQuery = Annotated[
+    str,
+    GetPydanticSchema(get_pydantic_json_schema=_filters_json_schema),
+    Query(
+        description="JSON-encoded mapping of field paths to Filter operators.",
+        json_schema_extra={"x-filterables": True},
+        openapi_examples={
+            "combined_filters": {
+                "summary": "Combine equality, an exclusive range, and membership",
+                "value": '{"id":{"$in":["2","3"],"age":{"$gt":18,"$lt":35},"name":{"$eq":"Bob"}}}',
+            },
+        },
+    ),
+]
+
+
+def filters(filters: _FiltersQuery = "{}") -> Filters:
     """
     FastAPI compatible query parameter `Filters` parsing.
 
