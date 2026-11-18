@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Annotated, Callable
+from typing import Annotated, Callable, cast
 
 from fastapi import Query
 from fastapi.exceptions import HTTPException
@@ -20,7 +20,8 @@ def _filters_json_schema(schema: CoreSchema, handler: GetJsonSchemaHandler) -> J
     return {**handler(schema), **handler(TypeAdapter(Json[Filters]).core_schema)}
 
 
-_FiltersQuery = Annotated[str, GetPydanticSchema(get_pydantic_json_schema=_filters_json_schema)]
+_FiltersSchema = GetPydanticSchema(get_pydantic_json_schema=_filters_json_schema)
+_FiltersQuery = Annotated[str, _FiltersSchema]
 
 _FiltersDefault = Query(
     description="JSON-encoded mapping of field paths to Filter operators.",
@@ -68,6 +69,7 @@ def filters_dependency(query: QueryParam) -> Callable[[str], Filters]:
     """
     query = deepcopy(query)
     query.alias = query.alias or "filters"
+    extras = query.json_schema_extra
 
     # ensure that an empty filter set is provided at all times
     if query.default is PydanticUndefined and query.default_factory is None:
@@ -81,12 +83,13 @@ def filters_dependency(query: QueryParam) -> Callable[[str], Filters]:
     if query.openapi_examples is None and query.examples is None:
         query.openapi_examples = deepcopy(_FiltersDefault.openapi_examples)
 
-    # overwrite our values
-    default = query.default
-    query.default = PydanticUndefined
-    query.json_schema_extra = {**(query.json_schema_extra or {}), "x-filterables": True}
+    # merge schema extras as needed
+    query.metadata.insert(0, _FiltersSchema)
+    query.json_schema_extra = (
+        _add_filter_marker(extras) if callable(extras) else {**(extras or {}), "x-filterables": True}
+    )
 
-    def _filters(value: Annotated[_FiltersQuery, query] = default) -> Filters:
+    def _filters(value: str = cast(str, query)) -> Filters:
         return filters(value)
 
     return _filters
@@ -94,3 +97,15 @@ def filters_dependency(query: QueryParam) -> Callable[[str], Filters]:
 
 # forwards compat
 paginate = Paginator
+
+
+def _add_filter_marker(extras: Callable[[JsonSchemaValue], None]) -> Callable[[JsonSchemaValue], None]:
+    """
+    Wrap a schema extras callback to set the filter marker after it runs.
+    """
+
+    def _add_marker(schema: JsonSchemaValue) -> None:
+        extras(schema)
+        schema["x-filterables"] = True
+
+    return _add_marker
