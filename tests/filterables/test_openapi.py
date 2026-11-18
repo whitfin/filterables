@@ -112,18 +112,24 @@ def test_filters_openapi_content(response_model):
     assert app.openapi() is schema
 
 
-def test_filters_dependency_openapi_options():
+@pytest.mark.parametrize("use_callback", [False, True], ids=["dict", "callback"])
+def test_filters_dependency_openapi_options(use_callback):
     """
     Test consumer metadata and examples override defaults and survive conversion.
     """
     app = FastAPI()
+    extras = {"x-supported-fields": ["age"], "x-filterables": False}
+
+    def add_schema_extras(schema):
+        schema.update(extras)
+
     dependency = filters_dependency(
         Query(
             description="Filter people by age.",
             title="People filters",
             deprecated=True,
             openapi_examples={"adults": {"summary": "Older than eighteen", "value": {"age": {"$gt": 18}}}},
-            json_schema_extra={"x-supported-fields": ["age"], "x-filterables": False},
+            json_schema_extra=add_schema_extras if use_callback else extras,
         )
     )
 
@@ -164,6 +170,23 @@ def test_filters_dependency_openapi_string_constraints():
     app.openapi = with_filter_docs(app.openapi)
     (parameter,) = app.openapi()["paths"]["/filters"]["get"]["parameters"]
     assert constraints.keys().isdisjoint(parameter["content"]["application/json"]["schema"])
+
+
+def test_filters_dependency_openapi_custom_default():
+    """
+    Test a Query default appears as JSON content in the filter schema.
+    """
+    app = FastAPI()
+    dependency = filters_dependency(Query('{"age":{"$gt":18}}'))
+
+    @app.get("/filters")
+    def get_filters(parsed: Filters = Depends(dependency)):
+        return parsed
+
+    app.openapi = with_filter_docs(app.openapi)
+    (parameter,) = app.openapi()["paths"]["/filters"]["get"]["parameters"]
+
+    assert parameter["content"]["application/json"]["schema"]["default"] == {"age": {"$gt": 18}}
 
 
 def test_filters_dependency_schema_examples():
