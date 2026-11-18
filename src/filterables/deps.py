@@ -27,8 +27,12 @@ _FiltersDefault = Query(
     json_schema_extra={"x-filterables": True},
     openapi_examples={
         "combined_filters": {
-            "summary": "Combine equality, an exclusive range, and membership",
-            "value": '{"id":{"$in":["2","3"]},"age":{"$gt":18,"$lt":35},"name":{"$eq":"Bob"}}',
+            "summary": "Filter for equality, an exclusive range, and membership.",
+            "value": {
+                "id": {"$in": ["2", "3"]},
+                "age": {"$gt": 18, "$lt": 35},
+                "name": {"$eq": "Bob"},
+            },
         },
     },
 )

@@ -35,8 +35,8 @@ def test_filters_openapi(dependency):
     assert set(parameter["examples"]) == {"combined_filters"}
 
     example = parameter["examples"]["combined_filters"]
-    assert example["summary"] == "Combine equality, an exclusive range, and membership"
-    assert json.loads(example["value"]) == {
+    assert example["summary"] == "Filter for equality, an exclusive range, and membership."
+    assert example["value"] == {
         "name": {"$eq": "Bob"},
         "age": {"$gt": 18, "$lt": 35},
         "id": {"$in": ["2", "3"]},
@@ -93,7 +93,7 @@ def test_filters_openapi_content(response_model):
             },
             "examples": {
                 "combined_filters": {
-                    "summary": "Combine equality, an exclusive range, and membership",
+                    "summary": "Filter for equality, an exclusive range, and membership.",
                     "value": {"name": {"$eq": "Bob"}, "age": {"$gt": 18, "$lt": 35}, "id": {"$in": ["2", "3"]}},
                 },
             },
@@ -122,7 +122,7 @@ def test_filters_dependency_openapi_options():
             description="Filter people by age.",
             title="People filters",
             deprecated=True,
-            openapi_examples={"adults": {"summary": "Older than eighteen", "value": '{"age":{"$gt":18}}'}},
+            openapi_examples={"adults": {"summary": "Older than eighteen", "value": {"age": {"$gt": 18}}}},
             json_schema_extra={"x-supported-fields": ["age"], "x-filterables": False},
         )
     )
@@ -168,10 +168,10 @@ def test_filters_dependency_openapi_string_constraints():
 
 def test_filters_dependency_schema_examples():
     """
-    Test Query examples replace built-in examples and describe decoded JSON.
+    Test Query schema examples replace the built-in named example.
     """
     app = FastAPI()
-    dependency = filters_dependency(Query(examples=['{"age":{"$gt":18}}']))
+    dependency = filters_dependency(Query(examples=[{"age": {"$gt": 18}}]))
 
     @app.get("/filters")
     def get_filters(parsed: Filters = Depends(dependency)):
@@ -188,11 +188,11 @@ def test_filters_dependency_schema_examples():
 
 def test_filters_dependency_preserves_supplied_query():
     """
-    Test reusing a Query does not change its metadata or JSON example strings.
+    Test reusing a Query does not change its metadata or examples.
     """
     app = FastAPI()
     query = Query(
-        openapi_examples={"adults": {"value": '{"age":{"$gt":18}}'}},
+        openapi_examples={"adults": {"value": {"age": {"$gt": 18}}}},
         json_schema_extra={"x-supported-fields": ["age"]},
     )
     first_dependency = filters_dependency(query)
@@ -213,7 +213,7 @@ def test_filters_dependency_preserves_supplied_query():
     assert app.openapi() == original
     assert query.alias is None
     assert query.description is None
-    assert query.openapi_examples == {"adults": {"value": '{"age":{"$gt":18}}'}}
+    assert query.openapi_examples == {"adults": {"value": {"age": {"$gt": 18}}}}
     assert query.json_schema_extra == {"x-supported-fields": ["age"]}
 
 

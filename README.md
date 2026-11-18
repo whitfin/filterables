@@ -54,7 +54,7 @@ class MyClass(Filterable, SQLModel):
 Rather than combining both into a single parent class, these two classes
 are kept separate in order to support multiple workflows (described later).
 
-_If you want to skip the README, you can check out an (example)[tests/example.py]._
+_If you want to skip the README, you can check out an [example](tests/example.py)._
 
 ## Filtering
 
@@ -210,7 +210,6 @@ create a JSON-based pagination via query parameters:
 ```python
 from filterables.deps import filters, paginate
 from filterables.filters import Filters
-from filterables.openapi import with_filter_docs
 from filterables.pages import Paginator
 
 # demonstration filterable class
@@ -223,10 +222,6 @@ class Person(Filterable, SQLModel):
 @app.get("/person")
 def find_resources(filters: Filters = Depends(filters), paginator: Paginator = Depends(paginate)) -> Pagination[Person]:
     return paginator.exec(session, select(Person), filters)
-
-
-# support Filter types in OpenAPI docs
-app.openapi = with_filter_docs(app.openapi)
 ```
 
 This will select a filtered page based on query parameters and return the
@@ -261,6 +256,43 @@ set the fields to `None` regardless of whether their type is designated as optio
 
 By default, all empty objects and values will be skipped from the response. You
 can customize this behaviour using a custom Pydantic serializer on your model class.
+
+### OpenAPI Documentation
+
+By default FastAPI's OpenAPI documentation can't properly recognise the encoded
+`Filter` types on your API. You can resolve this by using `with_filter_docs`:
+
+```python
+from filterables.openapi import with_filter_docs
+
+app.openapi = with_filter_docs(app.openapi)
+```
+
+If you want to extend the parameter documentation with examples tailored to your
+SQL models, you can use `filters_dependency` along with FastAPI's `Query` to add
+overriding metadata to a route:
+
+```python
+from fastapi import Query
+
+from filterables.deps import filters_dependency
+
+people_filters = filters_dependency(
+    Query(
+        description="Filter people by age or name.",
+        openapi_examples={
+            "age_range": {
+                "summary": "People older than 18 and younger than 35",
+                "value": {"age": {"$gt": 18, "$lt": 35}},
+            },
+        },
+        json_schema_extra={"x-supported-fields": ["age", "name"]},
+    )
+)
+```
+
+Using `Depends(people_filters)` in place of `Depends(filters)` will use the custom
+examples and override the defaults with user defined values.
 
 ## Custom Sorting
 
