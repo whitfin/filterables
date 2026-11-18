@@ -25,7 +25,7 @@ def with_filter_docs(openapi: Callable[[], dict[str, Any]]) -> Callable[[], dict
                     examples = parameter.pop("examples", {})
 
                     _build_content(content, definition)
-                    _decode_examples(content, examples)
+                    _build_example(content, examples)
 
                     parameter["content"] = {
                         "application/json": {
@@ -65,15 +65,13 @@ def _build_content(content: dict[str, Any], definition: Mapping[str, Any]) -> No
         content["default"] = json.loads(definition["default"])
 
 
-def _decode_examples(content: dict[str, Any], examples: Mapping[str, dict[str, Any]]) -> None:
+def _build_example(content: dict[str, Any], examples: Mapping[str, dict[str, Any]]) -> None:
     """
-    Decode examples in place and supply a fallback example for Swagger UI.
+    Supply the first available example on the schema for Swagger UI.
     """
     if existing := content.get("examples"):
-        content["examples"] = [json.loads(example) for example in existing]
-        content.setdefault("example", content["examples"][0])
+        content.setdefault("example", existing[0])
 
     for example in examples.values():
         if "value" in example:
-            example["value"] = json.loads(example["value"])
             content.setdefault("example", example["value"])
