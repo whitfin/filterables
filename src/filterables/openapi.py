@@ -1,5 +1,6 @@
 import json
-from typing import Any, Callable
+from collections.abc import Callable, Mapping
+from typing import Any
 
 
 def with_filter_docs(openapi: Callable[[], dict[str, Any]]) -> Callable[[], dict[str, Any]]:
@@ -20,16 +21,11 @@ def with_filter_docs(openapi: Callable[[], dict[str, Any]]) -> Callable[[], dict
                     if not definition.get("x-filterables"):
                         continue
 
-                    content = definition["contentSchema"].copy()
+                    content = dict(definition)
                     examples = parameter.pop("examples", {})
 
-                    if "default" in definition:
-                        content["default"] = json.loads(definition["default"])
-
-                    for example in examples.values():
-                        if "value" in example:
-                            example["value"] = json.loads(example["value"])
-                            content.setdefault("example", example["value"])
+                    _build_content(content, definition)
+                    _decode_examples(content, examples)
 
                     parameter["content"] = {
                         "application/json": {
@@ -43,3 +39,41 @@ def with_filter_docs(openapi: Callable[[], dict[str, Any]]) -> Callable[[], dict
         return schema
 
     return _openapi
+
+
+def _build_content(content: dict[str, Any], definition: Mapping[str, Any]) -> None:
+    """
+    Update the content schema in place to describe the decoded JSON value.
+    """
+    removed = (
+        "type",
+        "contentMediaType",
+        "contentSchema",
+        "x-filterables",
+        "default",
+        "minLength",
+        "maxLength",
+        "pattern",
+    )
+
+    for key in removed:
+        content.pop(key, None)
+
+    content.update(definition["contentSchema"])
+
+    if "default" in definition:
+        content["default"] = json.loads(definition["default"])
+
+
+def _decode_examples(content: dict[str, Any], examples: Mapping[str, dict[str, Any]]) -> None:
+    """
+    Decode examples in place and supply a fallback example for Swagger UI.
+    """
+    if existing := content.get("examples"):
+        content["examples"] = [json.loads(example) for example in existing]
+        content.setdefault("example", content["examples"][0])
+
+    for example in examples.values():
+        if "value" in example:
+            example["value"] = json.loads(example["value"])
+            content.setdefault("example", example["value"])

@@ -2,24 +2,25 @@ import json
 from copy import deepcopy
 
 import pytest
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Query
 from fastapi.testclient import TestClient
 from pydantic import create_model
 
-from filterables.deps import filters, paginate
+from filterables.deps import filters, filters_dependency, paginate
 from filterables.filters import Filters
 from filterables.openapi import with_filter_docs
 from filterables.pages import Paginator
 
 
-def test_filters_openapi():
+@pytest.mark.parametrize("dependency", [filters, filters_dependency(Query())])
+def test_filters_openapi(dependency):
     """
     Test the unconfigured string parameter describes its JSON content.
     """
     app = FastAPI()
 
     @app.get("/filters")
-    def get_filters(parsed: Filters = Depends(filters)):
+    def get_filters(parsed: Filters = Depends(dependency)):
         return parsed
 
     schema = app.openapi()
@@ -85,6 +86,8 @@ def test_filters_openapi_content(response_model):
         "application/json": {
             "schema": {
                 "$ref": "#/components/schemas/Filters",
+                "description": "JSON-encoded mapping of field paths to Filter operators.",
+                "title": "Filters",
                 "default": {},
                 "example": {"name": {"$eq": "Bob"}, "age": {"$gt": 18, "$lt": 35}, "id": {"$in": ["2", "3"]}},
             },
@@ -107,6 +110,111 @@ def test_filters_openapi_content(response_model):
         parameter for parameter in original["paths"]["/filters"]["get"]["parameters"] if parameter["name"] != "filters"
     ]
     assert app.openapi() is schema
+
+
+def test_filters_dependency_openapi_options():
+    """
+    Test consumer metadata and examples override defaults and survive conversion.
+    """
+    app = FastAPI()
+    dependency = filters_dependency(
+        Query(
+            description="Filter people by age.",
+            title="People filters",
+            deprecated=True,
+            openapi_examples={"adults": {"summary": "Older than eighteen", "value": '{"age":{"$gt":18}}'}},
+            json_schema_extra={"x-supported-fields": ["age"], "x-filterables": False},
+        )
+    )
+
+    @app.get("/filters")
+    def get_filters(parsed: Filters = Depends(dependency)):
+        return parsed
+
+    app.openapi = with_filter_docs(app.openapi)
+    (parameter,) = app.openapi()["paths"]["/filters"]["get"]["parameters"]
+
+    assert parameter["description"] == "Filter people by age."
+    assert parameter["deprecated"] is True
+
+    content = parameter["content"]["application/json"]
+    assert content["schema"]["$ref"] == "#/components/schemas/Filters"
+    assert content["schema"]["title"] == "People filters"
+    assert content["schema"]["x-supported-fields"] == ["age"]
+    assert "x-filterables" not in content["schema"]
+    assert content["schema"]["example"] == {"age": {"$gt": 18}}
+    assert content["examples"] == {"adults": {"summary": "Older than eighteen", "value": {"age": {"$gt": 18}}}}
+
+
+def test_filters_dependency_openapi_string_constraints():
+    """
+    Test string constraints describe the encoded query value only.
+    """
+    app = FastAPI()
+    dependency = filters_dependency(Query(min_length=2, max_length=128, pattern=r"^\{"))
+
+    @app.get("/filters")
+    def get_filters(parsed: Filters = Depends(dependency)):
+        return parsed
+
+    (parameter,) = app.openapi()["paths"]["/filters"]["get"]["parameters"]
+    constraints = {"minLength": 2, "maxLength": 128, "pattern": r"^\{"}
+    assert {key: parameter["schema"].get(key) for key in constraints} == constraints
+
+    app.openapi = with_filter_docs(app.openapi)
+    (parameter,) = app.openapi()["paths"]["/filters"]["get"]["parameters"]
+    assert constraints.keys().isdisjoint(parameter["content"]["application/json"]["schema"])
+
+
+def test_filters_dependency_schema_examples():
+    """
+    Test Query examples replace built-in examples and describe decoded JSON.
+    """
+    app = FastAPI()
+    dependency = filters_dependency(Query(examples=['{"age":{"$gt":18}}']))
+
+    @app.get("/filters")
+    def get_filters(parsed: Filters = Depends(dependency)):
+        return parsed
+
+    app.openapi = with_filter_docs(app.openapi)
+    (parameter,) = app.openapi()["paths"]["/filters"]["get"]["parameters"]
+    content = parameter["content"]["application/json"]
+
+    assert content["examples"] == {}
+    assert content["schema"]["examples"] == [{"age": {"$gt": 18}}]
+    assert content["schema"]["example"] == {"age": {"$gt": 18}}
+
+
+def test_filters_dependency_preserves_supplied_query():
+    """
+    Test reusing a Query does not change its metadata or JSON example strings.
+    """
+    app = FastAPI()
+    query = Query(
+        openapi_examples={"adults": {"value": '{"age":{"$gt":18}}'}},
+        json_schema_extra={"x-supported-fields": ["age"]},
+    )
+    first_dependency = filters_dependency(query)
+    second_dependency = filters_dependency(query)
+
+    @app.get("/first")
+    def first(parsed: Filters = Depends(first_dependency)):
+        return parsed
+
+    @app.get("/second")
+    def second(parsed: Filters = Depends(second_dependency)):
+        return parsed
+
+    app.openapi = with_filter_docs(app.openapi)
+    original = deepcopy(app.openapi())
+    app.openapi_schema = None
+
+    assert app.openapi() == original
+    assert query.alias is None
+    assert query.description is None
+    assert query.openapi_examples == {"adults": {"value": '{"age":{"$gt":18}}'}}
+    assert query.json_schema_extra == {"x-supported-fields": ["age"]}
 
 
 @pytest.mark.parametrize("model_name", ["Filters", "FilterEquals"])
